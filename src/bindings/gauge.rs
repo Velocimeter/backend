@@ -44,14 +44,7 @@ pub mod gauge {
                         ),
                     },
                     ::ethers::core::abi::ethabi::Param {
-                        name: ::std::borrow::ToOwned::to_owned("_agg"),
-                        kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                        internal_type: ::core::option::Option::Some(
-                            ::std::borrow::ToOwned::to_owned("address"),
-                        ),
-                    },
-                    ::ethers::core::abi::ethabi::Param {
-                        name: ::std::borrow::ToOwned::to_owned("_oAgg"),
+                        name: ::std::borrow::ToOwned::to_owned("_oFlow"),
                         kind: ::ethers::core::abi::ethabi::ParamType::Address,
                         internal_type: ::core::option::Option::Some(
                             ::std::borrow::ToOwned::to_owned("address"),
@@ -106,60 +99,10 @@ pub mod gauge {
                     ],
                 ),
                 (
-                    ::std::borrow::ToOwned::to_owned("agg"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("agg"),
-                            inputs: ::std::vec![],
-                            outputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::string::String::new(),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
-                        },
-                    ],
-                ),
-                (
                     ::std::borrow::ToOwned::to_owned("balanceOf"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::Function {
                             name: ::std::borrow::ToOwned::to_owned("balanceOf"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::string::String::new(),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::string::String::new(),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint256"),
-                                    ),
-                                },
-                            ],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
-                        },
-                    ],
-                ),
-                (
-                    ::std::borrow::ToOwned::to_owned("balanceWithLock"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("balanceWithLock"),
                             inputs: ::std::vec![
                                 ::ethers::core::abi::ethabi::Param {
                                     name: ::std::string::String::new(),
@@ -349,44 +292,6 @@ pub mod gauge {
                     ],
                 ),
                 (
-                    ::std::borrow::ToOwned::to_owned("depositWithLock"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("depositWithLock"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("account"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("amount"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint256"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("_lockDuration"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint256"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
-                ),
-                (
                     ::std::borrow::ToOwned::to_owned("derivedBalance"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::Function {
@@ -541,6 +446,26 @@ pub mod gauge {
                                     ),
                                     internal_type: ::core::option::Option::Some(
                                         ::std::borrow::ToOwned::to_owned("uint256"),
+                                    ),
+                                },
+                            ],
+                            constant: ::core::option::Option::None,
+                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("flow"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Function {
+                            name: ::std::borrow::ToOwned::to_owned("flow"),
+                            inputs: ::std::vec![],
+                            outputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::string::String::new(),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("address"),
                                     ),
                                 },
                             ],
@@ -903,36 +828,6 @@ pub mod gauge {
                     ],
                 ),
                 (
-                    ::std::borrow::ToOwned::to_owned("lockEnd"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("lockEnd"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::string::String::new(),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::string::String::new(),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint256"),
-                                    ),
-                                },
-                            ],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
-                        },
-                    ],
-                ),
-                (
                     ::std::borrow::ToOwned::to_owned("notifyRewardAmount"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::Function {
@@ -992,10 +887,10 @@ pub mod gauge {
                     ],
                 ),
                 (
-                    ::std::borrow::ToOwned::to_owned("oAgg"),
+                    ::std::borrow::ToOwned::to_owned("oFlow"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("oAgg"),
+                            name: ::std::borrow::ToOwned::to_owned("oFlow"),
                             inputs: ::std::vec![],
                             outputs: ::std::vec![
                                 ::ethers::core::abi::ethabi::Param {
@@ -1776,17 +1671,6 @@ pub mod gauge {
                 .method_hash([141, 213, 152, 251], ())
                 .expect("method not found (this should never happen)")
         }
-        ///Calls the contract's `agg` (0xf5e34bfa) function
-        pub fn agg(
-            &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
-            self.0
-                .method_hash([245, 227, 75, 250], ())
-                .expect("method not found (this should never happen)")
-        }
         ///Calls the contract's `balanceOf` (0x70a08231) function
         pub fn balance_of(
             &self,
@@ -1794,15 +1678,6 @@ pub mod gauge {
         ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::U256> {
             self.0
                 .method_hash([112, 160, 130, 49], p0)
-                .expect("method not found (this should never happen)")
-        }
-        ///Calls the contract's `balanceWithLock` (0x9843bafa) function
-        pub fn balance_with_lock(
-            &self,
-            p0: ::ethers::core::types::Address,
-        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::U256> {
-            self.0
-                .method_hash([152, 67, 186, 250], p0)
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `batchRewardPerToken` (0x5a45d052) function
@@ -1857,17 +1732,6 @@ pub mod gauge {
                 .method_hash([198, 246, 120, 189], token_id)
                 .expect("method not found (this should never happen)")
         }
-        ///Calls the contract's `depositWithLock` (0x1f933c2d) function
-        pub fn deposit_with_lock(
-            &self,
-            account: ::ethers::core::types::Address,
-            amount: ::ethers::core::types::U256,
-            lock_duration: ::ethers::core::types::U256,
-        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
-            self.0
-                .method_hash([31, 147, 60, 45], (account, amount, lock_duration))
-                .expect("method not found (this should never happen)")
-        }
         ///Calls the contract's `derivedBalance` (0xd35e2544) function
         pub fn derived_balance(
             &self,
@@ -1918,6 +1782,17 @@ pub mod gauge {
         ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::U256> {
             self.0
                 .method_hash([76, 2, 162, 28], ())
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `flow` (0x343aad82) function
+        pub fn flow(
+            &self,
+        ) -> ::ethers::contract::builders::ContractCall<
+            M,
+            ::ethers::core::types::Address,
+        > {
+            self.0
+                .method_hash([52, 58, 173, 130], ())
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `gaugeFactory` (0x0d52333c) function
@@ -2027,15 +1902,6 @@ pub mod gauge {
                 .method_hash([153, 188, 192, 82], token)
                 .expect("method not found (this should never happen)")
         }
-        ///Calls the contract's `lockEnd` (0x23792279) function
-        pub fn lock_end(
-            &self,
-            p0: ::ethers::core::types::Address,
-        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::U256> {
-            self.0
-                .method_hash([35, 121, 34, 121], p0)
-                .expect("method not found (this should never happen)")
-        }
         ///Calls the contract's `notifyRewardAmount` (0xb66503cf) function
         pub fn notify_reward_amount(
             &self,
@@ -2055,15 +1921,15 @@ pub mod gauge {
                 .method_hash([111, 207, 255, 69], p0)
                 .expect("method not found (this should never happen)")
         }
-        ///Calls the contract's `oAgg` (0x11e00c88) function
-        pub fn o_agg(
+        ///Calls the contract's `oFlow` (0x4665b5c9) function
+        pub fn o_flow(
             &self,
         ) -> ::ethers::contract::builders::ContractCall<
             M,
             ::ethers::core::types::Address,
         > {
             self.0
-                .method_hash([17, 224, 12, 136], ())
+                .method_hash([70, 101, 181, 201], ())
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `periodFinish` (0xda09d19d) function
@@ -2486,19 +2352,6 @@ pub mod gauge {
     )]
     #[ethcall(name = "_ve", abi = "_ve()")]
     pub struct VeCall;
-    ///Container type for all input parameters for the `agg` function with signature `agg()` and selector `0xf5e34bfa`
-    #[derive(
-        Clone,
-        ::ethers::contract::EthCall,
-        ::ethers::contract::EthDisplay,
-        Default,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash
-    )]
-    #[ethcall(name = "agg", abi = "agg()")]
-    pub struct AggCall;
     ///Container type for all input parameters for the `balanceOf` function with signature `balanceOf(address)` and selector `0x70a08231`
     #[derive(
         Clone,
@@ -2512,19 +2365,6 @@ pub mod gauge {
     )]
     #[ethcall(name = "balanceOf", abi = "balanceOf(address)")]
     pub struct BalanceOfCall(pub ::ethers::core::types::Address);
-    ///Container type for all input parameters for the `balanceWithLock` function with signature `balanceWithLock(address)` and selector `0x9843bafa`
-    #[derive(
-        Clone,
-        ::ethers::contract::EthCall,
-        ::ethers::contract::EthDisplay,
-        Default,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash
-    )]
-    #[ethcall(name = "balanceWithLock", abi = "balanceWithLock(address)")]
-    pub struct BalanceWithLockCall(pub ::ethers::core::types::Address);
     ///Container type for all input parameters for the `batchRewardPerToken` function with signature `batchRewardPerToken(address,uint256)` and selector `0x5a45d052`
     #[derive(
         Clone,
@@ -2610,26 +2450,6 @@ pub mod gauge {
     pub struct DepositAllCall {
         pub token_id: ::ethers::core::types::U256,
     }
-    ///Container type for all input parameters for the `depositWithLock` function with signature `depositWithLock(address,uint256,uint256)` and selector `0x1f933c2d`
-    #[derive(
-        Clone,
-        ::ethers::contract::EthCall,
-        ::ethers::contract::EthDisplay,
-        Default,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash
-    )]
-    #[ethcall(
-        name = "depositWithLock",
-        abi = "depositWithLock(address,uint256,uint256)"
-    )]
-    pub struct DepositWithLockCall {
-        pub account: ::ethers::core::types::Address,
-        pub amount: ::ethers::core::types::U256,
-        pub lock_duration: ::ethers::core::types::U256,
-    }
     ///Container type for all input parameters for the `derivedBalance` function with signature `derivedBalance(address)` and selector `0xd35e2544`
     #[derive(
         Clone,
@@ -2713,6 +2533,19 @@ pub mod gauge {
     )]
     #[ethcall(name = "fees1", abi = "fees1()")]
     pub struct Fees1Call;
+    ///Container type for all input parameters for the `flow` function with signature `flow()` and selector `0x343aad82`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash
+    )]
+    #[ethcall(name = "flow", abi = "flow()")]
+    pub struct FlowCall;
     ///Container type for all input parameters for the `gaugeFactory` function with signature `gaugeFactory()` and selector `0x0d52333c`
     #[derive(
         Clone,
@@ -2883,19 +2716,6 @@ pub mod gauge {
     pub struct LeftCall {
         pub token: ::ethers::core::types::Address,
     }
-    ///Container type for all input parameters for the `lockEnd` function with signature `lockEnd(address)` and selector `0x23792279`
-    #[derive(
-        Clone,
-        ::ethers::contract::EthCall,
-        ::ethers::contract::EthDisplay,
-        Default,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash
-    )]
-    #[ethcall(name = "lockEnd", abi = "lockEnd(address)")]
-    pub struct LockEndCall(pub ::ethers::core::types::Address);
     ///Container type for all input parameters for the `notifyRewardAmount` function with signature `notifyRewardAmount(address,uint256)` and selector `0xb66503cf`
     #[derive(
         Clone,
@@ -2925,7 +2745,7 @@ pub mod gauge {
     )]
     #[ethcall(name = "numCheckpoints", abi = "numCheckpoints(address)")]
     pub struct NumCheckpointsCall(pub ::ethers::core::types::Address);
-    ///Container type for all input parameters for the `oAgg` function with signature `oAgg()` and selector `0x11e00c88`
+    ///Container type for all input parameters for the `oFlow` function with signature `oFlow()` and selector `0x4665b5c9`
     #[derive(
         Clone,
         ::ethers::contract::EthCall,
@@ -2936,8 +2756,8 @@ pub mod gauge {
         Eq,
         Hash
     )]
-    #[ethcall(name = "oAgg", abi = "oAgg()")]
-    pub struct OaggCall;
+    #[ethcall(name = "oFlow", abi = "oFlow()")]
+    pub struct OflowCall;
     ///Container type for all input parameters for the `periodFinish` function with signature `periodFinish(address)` and selector `0xda09d19d`
     #[derive(
         Clone,
@@ -3233,21 +3053,19 @@ pub mod gauge {
     #[derive(Clone, ::ethers::contract::EthAbiType, Debug, PartialEq, Eq, Hash)]
     pub enum GaugeCalls {
         Ve(VeCall),
-        Agg(AggCall),
         BalanceOf(BalanceOfCall),
-        BalanceWithLock(BalanceWithLockCall),
         BatchRewardPerToken(BatchRewardPerTokenCall),
         BatchUpdateRewardPerToken(BatchUpdateRewardPerTokenCall),
         Checkpoints(CheckpointsCall),
         Deposit(DepositCall),
         DepositAll(DepositAllCall),
-        DepositWithLock(DepositWithLockCall),
         DerivedBalance(DerivedBalanceCall),
         DerivedBalances(DerivedBalancesCall),
         DerivedSupply(DerivedSupplyCall),
         Earned(EarnedCall),
         Fees0(Fees0Call),
         Fees1(Fees1Call),
+        Flow(FlowCall),
         GaugeFactory(GaugeFactoryCall),
         GetPriorBalanceIndex(GetPriorBalanceIndexCall),
         GetPriorRewardPerToken(GetPriorRewardPerTokenCall),
@@ -3259,10 +3077,9 @@ pub mod gauge {
         LastTimeRewardApplicable(LastTimeRewardApplicableCall),
         LastUpdateTime(LastUpdateTimeCall),
         Left(LeftCall),
-        LockEnd(LockEndCall),
         NotifyRewardAmount(NotifyRewardAmountCall),
         NumCheckpoints(NumCheckpointsCall),
-        Oagg(OaggCall),
+        Oflow(OflowCall),
         PeriodFinish(PeriodFinishCall),
         RewardPerToken(RewardPerTokenCall),
         RewardPerTokenCheckpoints(RewardPerTokenCheckpointsCall),
@@ -3294,16 +3111,8 @@ pub mod gauge {
                 return Ok(Self::Ve(decoded));
             }
             if let Ok(decoded)
-                = <AggCall as ::ethers::core::abi::AbiDecode>::decode(data) {
-                return Ok(Self::Agg(decoded));
-            }
-            if let Ok(decoded)
                 = <BalanceOfCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::BalanceOf(decoded));
-            }
-            if let Ok(decoded)
-                = <BalanceWithLockCall as ::ethers::core::abi::AbiDecode>::decode(data) {
-                return Ok(Self::BalanceWithLock(decoded));
             }
             if let Ok(decoded)
                 = <BatchRewardPerTokenCall as ::ethers::core::abi::AbiDecode>::decode(
@@ -3330,10 +3139,6 @@ pub mod gauge {
                 return Ok(Self::DepositAll(decoded));
             }
             if let Ok(decoded)
-                = <DepositWithLockCall as ::ethers::core::abi::AbiDecode>::decode(data) {
-                return Ok(Self::DepositWithLock(decoded));
-            }
-            if let Ok(decoded)
                 = <DerivedBalanceCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::DerivedBalance(decoded));
             }
@@ -3356,6 +3161,10 @@ pub mod gauge {
             if let Ok(decoded)
                 = <Fees1Call as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Fees1(decoded));
+            }
+            if let Ok(decoded)
+                = <FlowCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+                return Ok(Self::Flow(decoded));
             }
             if let Ok(decoded)
                 = <GaugeFactoryCall as ::ethers::core::abi::AbiDecode>::decode(data) {
@@ -3410,10 +3219,6 @@ pub mod gauge {
                 return Ok(Self::Left(decoded));
             }
             if let Ok(decoded)
-                = <LockEndCall as ::ethers::core::abi::AbiDecode>::decode(data) {
-                return Ok(Self::LockEnd(decoded));
-            }
-            if let Ok(decoded)
                 = <NotifyRewardAmountCall as ::ethers::core::abi::AbiDecode>::decode(
                     data,
                 ) {
@@ -3424,8 +3229,8 @@ pub mod gauge {
                 return Ok(Self::NumCheckpoints(decoded));
             }
             if let Ok(decoded)
-                = <OaggCall as ::ethers::core::abi::AbiDecode>::decode(data) {
-                return Ok(Self::Oagg(decoded));
+                = <OflowCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+                return Ok(Self::Oflow(decoded));
             }
             if let Ok(decoded)
                 = <PeriodFinishCall as ::ethers::core::abi::AbiDecode>::decode(data) {
@@ -3530,11 +3335,7 @@ pub mod gauge {
         fn encode(self) -> Vec<u8> {
             match self {
                 Self::Ve(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::Agg(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::BalanceOf(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::BalanceWithLock(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::BatchRewardPerToken(element) => {
@@ -3550,9 +3351,6 @@ pub mod gauge {
                 Self::DepositAll(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::DepositWithLock(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
                 Self::DerivedBalance(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -3565,6 +3363,7 @@ pub mod gauge {
                 Self::Earned(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::Fees0(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::Fees1(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::Flow(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::GaugeFactory(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -3596,14 +3395,13 @@ pub mod gauge {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::Left(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::LockEnd(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::NotifyRewardAmount(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::NumCheckpoints(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::Oagg(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::Oflow(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::PeriodFinish(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -3665,9 +3463,7 @@ pub mod gauge {
         fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             match self {
                 Self::Ve(element) => ::core::fmt::Display::fmt(element, f),
-                Self::Agg(element) => ::core::fmt::Display::fmt(element, f),
                 Self::BalanceOf(element) => ::core::fmt::Display::fmt(element, f),
-                Self::BalanceWithLock(element) => ::core::fmt::Display::fmt(element, f),
                 Self::BatchRewardPerToken(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
@@ -3677,13 +3473,13 @@ pub mod gauge {
                 Self::Checkpoints(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Deposit(element) => ::core::fmt::Display::fmt(element, f),
                 Self::DepositAll(element) => ::core::fmt::Display::fmt(element, f),
-                Self::DepositWithLock(element) => ::core::fmt::Display::fmt(element, f),
                 Self::DerivedBalance(element) => ::core::fmt::Display::fmt(element, f),
                 Self::DerivedBalances(element) => ::core::fmt::Display::fmt(element, f),
                 Self::DerivedSupply(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Earned(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Fees0(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Fees1(element) => ::core::fmt::Display::fmt(element, f),
+                Self::Flow(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GaugeFactory(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GetPriorBalanceIndex(element) => {
                     ::core::fmt::Display::fmt(element, f)
@@ -3703,12 +3499,11 @@ pub mod gauge {
                 }
                 Self::LastUpdateTime(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Left(element) => ::core::fmt::Display::fmt(element, f),
-                Self::LockEnd(element) => ::core::fmt::Display::fmt(element, f),
                 Self::NotifyRewardAmount(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::NumCheckpoints(element) => ::core::fmt::Display::fmt(element, f),
-                Self::Oagg(element) => ::core::fmt::Display::fmt(element, f),
+                Self::Oflow(element) => ::core::fmt::Display::fmt(element, f),
                 Self::PeriodFinish(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RewardPerToken(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RewardPerTokenCheckpoints(element) => {
@@ -3749,19 +3544,9 @@ pub mod gauge {
             Self::Ve(value)
         }
     }
-    impl ::core::convert::From<AggCall> for GaugeCalls {
-        fn from(value: AggCall) -> Self {
-            Self::Agg(value)
-        }
-    }
     impl ::core::convert::From<BalanceOfCall> for GaugeCalls {
         fn from(value: BalanceOfCall) -> Self {
             Self::BalanceOf(value)
-        }
-    }
-    impl ::core::convert::From<BalanceWithLockCall> for GaugeCalls {
-        fn from(value: BalanceWithLockCall) -> Self {
-            Self::BalanceWithLock(value)
         }
     }
     impl ::core::convert::From<BatchRewardPerTokenCall> for GaugeCalls {
@@ -3787,11 +3572,6 @@ pub mod gauge {
     impl ::core::convert::From<DepositAllCall> for GaugeCalls {
         fn from(value: DepositAllCall) -> Self {
             Self::DepositAll(value)
-        }
-    }
-    impl ::core::convert::From<DepositWithLockCall> for GaugeCalls {
-        fn from(value: DepositWithLockCall) -> Self {
-            Self::DepositWithLock(value)
         }
     }
     impl ::core::convert::From<DerivedBalanceCall> for GaugeCalls {
@@ -3822,6 +3602,11 @@ pub mod gauge {
     impl ::core::convert::From<Fees1Call> for GaugeCalls {
         fn from(value: Fees1Call) -> Self {
             Self::Fees1(value)
+        }
+    }
+    impl ::core::convert::From<FlowCall> for GaugeCalls {
+        fn from(value: FlowCall) -> Self {
+            Self::Flow(value)
         }
     }
     impl ::core::convert::From<GaugeFactoryCall> for GaugeCalls {
@@ -3879,11 +3664,6 @@ pub mod gauge {
             Self::Left(value)
         }
     }
-    impl ::core::convert::From<LockEndCall> for GaugeCalls {
-        fn from(value: LockEndCall) -> Self {
-            Self::LockEnd(value)
-        }
-    }
     impl ::core::convert::From<NotifyRewardAmountCall> for GaugeCalls {
         fn from(value: NotifyRewardAmountCall) -> Self {
             Self::NotifyRewardAmount(value)
@@ -3894,9 +3674,9 @@ pub mod gauge {
             Self::NumCheckpoints(value)
         }
     }
-    impl ::core::convert::From<OaggCall> for GaugeCalls {
-        fn from(value: OaggCall) -> Self {
-            Self::Oagg(value)
+    impl ::core::convert::From<OflowCall> for GaugeCalls {
+        fn from(value: OflowCall) -> Self {
+            Self::Oflow(value)
         }
     }
     impl ::core::convert::From<PeriodFinishCall> for GaugeCalls {
@@ -4011,18 +3791,6 @@ pub mod gauge {
         Hash
     )]
     pub struct VeReturn(pub ::ethers::core::types::Address);
-    ///Container type for all return fields from the `agg` function with signature `agg()` and selector `0xf5e34bfa`
-    #[derive(
-        Clone,
-        ::ethers::contract::EthAbiType,
-        ::ethers::contract::EthAbiCodec,
-        Default,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash
-    )]
-    pub struct AggReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `balanceOf` function with signature `balanceOf(address)` and selector `0x70a08231`
     #[derive(
         Clone,
@@ -4035,18 +3803,6 @@ pub mod gauge {
         Hash
     )]
     pub struct BalanceOfReturn(pub ::ethers::core::types::U256);
-    ///Container type for all return fields from the `balanceWithLock` function with signature `balanceWithLock(address)` and selector `0x9843bafa`
-    #[derive(
-        Clone,
-        ::ethers::contract::EthAbiType,
-        ::ethers::contract::EthAbiCodec,
-        Default,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash
-    )]
-    pub struct BalanceWithLockReturn(pub ::ethers::core::types::U256);
     ///Container type for all return fields from the `checkpoints` function with signature `checkpoints(address,uint256)` and selector `0x0cdfebfa`
     #[derive(
         Clone,
@@ -4134,6 +3890,18 @@ pub mod gauge {
         Hash
     )]
     pub struct Fees1Return(pub ::ethers::core::types::U256);
+    ///Container type for all return fields from the `flow` function with signature `flow()` and selector `0x343aad82`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash
+    )]
+    pub struct FlowReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `gaugeFactory` function with signature `gaugeFactory()` and selector `0x0d52333c`
     #[derive(
         Clone,
@@ -4257,18 +4025,6 @@ pub mod gauge {
         Hash
     )]
     pub struct LeftReturn(pub ::ethers::core::types::U256);
-    ///Container type for all return fields from the `lockEnd` function with signature `lockEnd(address)` and selector `0x23792279`
-    #[derive(
-        Clone,
-        ::ethers::contract::EthAbiType,
-        ::ethers::contract::EthAbiCodec,
-        Default,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash
-    )]
-    pub struct LockEndReturn(pub ::ethers::core::types::U256);
     ///Container type for all return fields from the `numCheckpoints` function with signature `numCheckpoints(address)` and selector `0x6fcfff45`
     #[derive(
         Clone,
@@ -4281,7 +4037,7 @@ pub mod gauge {
         Hash
     )]
     pub struct NumCheckpointsReturn(pub ::ethers::core::types::U256);
-    ///Container type for all return fields from the `oAgg` function with signature `oAgg()` and selector `0x11e00c88`
+    ///Container type for all return fields from the `oFlow` function with signature `oFlow()` and selector `0x4665b5c9`
     #[derive(
         Clone,
         ::ethers::contract::EthAbiType,
@@ -4292,7 +4048,7 @@ pub mod gauge {
         Eq,
         Hash
     )]
-    pub struct OaggReturn(pub ::ethers::core::types::Address);
+    pub struct OflowReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `periodFinish` function with signature `periodFinish(address)` and selector `0xda09d19d`
     #[derive(
         Clone,

@@ -6,7 +6,9 @@ use tracing::info;
 use std::env;
 
 mod handlers;
-use handlers::{give_options_data, root};
+use handlers::{give_asset, give_assets, give_pairs, root};
+
+mod types;
 
 pub async fn server() {
     let db_url = env::var("DATABASE_URL").expect("Should be defined in .env");
@@ -19,7 +21,9 @@ pub async fn server() {
     // build our application with some routes
     let app = Router::new()
         .route("/", get(root))
-        .route("/options-data/:chain_id", get(give_options_data))
+        .route("/pairs/:chain_id", get(give_pairs))
+        .route("/assets/:chain_id", get(give_assets))
+        .route("/assets/:chain_id/:address", get(give_asset))
         .layer(Extension(conn));
 
     // run it with hyper
