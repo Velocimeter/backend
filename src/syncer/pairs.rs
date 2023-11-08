@@ -18,7 +18,7 @@ use crate::server::internal_error;
 use crate::syncer::{assets::find_asset, gauges::update_gauge, types::Chain};
 
 #[instrument(skip(chain, conn))]
-pub async fn update_pairs(chain: Chain, conn: Arc<DatabaseConnection>) -> Result<()> {
+pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Result<()> {
     info!(
         "Collecting pairs for chain id: {}",
         chain.get_chain_data().id
