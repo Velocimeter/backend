@@ -47,20 +47,23 @@ pub async fn update_pair_aprs(
 
     let is_option_emissions = is_option_emission(gauge_address, chain, Arc::clone(&client)).await?;
 
-    let mut reward_tokens = vec![];
+    // list of reward tokens in gauge contract
+    let mut reward_token_addresses = vec![];
 
     for i in 0..rewards_list_lenght.as_u64() {
         let reward_token_addy = gauge.rewards(U256::from(i)).call().await?;
-        reward_tokens.push(reward_token_addy);
+        reward_token_addresses.push(reward_token_addy);
     }
 
-    clean_up_stale_rewards(pair_address, reward_tokens.clone(), conn).await?;
+    clean_up_stale_rewards(pair_address, reward_token_addresses.clone(), conn).await?;
 
-    for reward_token_addy in reward_tokens {
-        let reward_token_addy_str = to_checksum(&reward_token_addy, None);
+    for reward_token_addy in reward_token_addresses {
+        let formatted_reward_token_addy = to_checksum(&reward_token_addy, None);
+
+        // this the actual token that is being emitted when claim happens
         let reward_token;
         if is_option_emissions
-            && reward_token_addy_str.to_lowercase()
+            && formatted_reward_token_addy.to_lowercase()
                 == chain.get_chain_data().default_token_address.to_lowercase()
         {
             reward_token = find_asset(
@@ -70,7 +73,7 @@ pub async fn update_pair_aprs(
             )
             .await?;
         } else {
-            reward_token = find_asset(reward_token_addy_str, chain, conn).await?;
+            reward_token = find_asset(formatted_reward_token_addy.to_owned(), chain, conn).await?;
         }
 
         multicall.add_call(gauge.reward_rate(reward_token_addy), false);
@@ -82,8 +85,8 @@ pub async fn update_pair_aprs(
 
         let reward: f64;
         if is_alive && left > U256::zero() {
+            // 86400 seconds in a day
             reward = format_units(reward_rate, reward_token.decimals)?.parse::<f64>()? * 86400.0;
-        // 86400 seconds in a day
         } else {
             reward = 0.0;
         }
@@ -118,7 +121,7 @@ pub async fn update_pair_aprs(
                     logo_url: ActiveValue::set(reward_token.logoURI),
                     max_apr: ActiveValue::not_set(),
                     min_apr: ActiveValue::not_set(),
-                    token_address: ActiveValue::set(reward_token.address),
+                    token_address: ActiveValue::set(formatted_reward_token_addy),
                     symbol: ActiveValue::set(reward_token.symbol),
                 };
 
@@ -137,7 +140,7 @@ pub async fn update_pair_aprs(
                     logo_url: ActiveValue::set(reward_token.logoURI),
                     max_apr: ActiveValue::set(Some(max_apr)),
                     min_apr: ActiveValue::set(Some(min_apr)),
-                    token_address: ActiveValue::set(reward_token.address),
+                    token_address: ActiveValue::set(formatted_reward_token_addy),
                     symbol: ActiveValue::set(reward_token.symbol),
                 };
 
@@ -164,7 +167,7 @@ pub async fn update_pair_aprs(
                 logo_url: ActiveValue::set(reward_token.logoURI),
                 max_apr: ActiveValue::not_set(),
                 min_apr: ActiveValue::not_set(),
-                token_address: ActiveValue::set(reward_token.address),
+                token_address: ActiveValue::set(formatted_reward_token_addy),
                 symbol: ActiveValue::set(reward_token.symbol),
             };
 
@@ -217,7 +220,7 @@ async fn is_option_emission(
 }
 
 ///
-/// If DB has bribes that are not longer in list of reward tokens in bribe contract, remove them.
+/// If DB has rewards that are not longer in list of reward tokens in gauge contract, remove them.
 ///
 async fn clean_up_stale_rewards(
     pair_address: H160,
