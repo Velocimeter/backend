@@ -103,8 +103,8 @@ async fn update_pair(
         address: ActiveValue::Set(to_checksum(&pair_address, None)),
         gauge_address: ActiveValue::Set(to_checksum(&gauge, None)),
         symbol: ActiveValue::Set(symbol),
-        token0_address: ActiveValue::Set(token_0.address),
-        token1_address: ActiveValue::Set(token_1.address),
+        token0_address: ActiveValue::Set(token_0.address.to_lowercase()),
+        token1_address: ActiveValue::Set(token_1.address.to_lowercase()),
         reserve0: ActiveValue::Set(reserve0),
         reserve1: ActiveValue::Set(reserve1),
         total_supply: ActiveValue::Set(total_supply),
@@ -122,6 +122,8 @@ async fn update_pair(
     if gauge != Address::zero() {
         info!("Pair {} is a gauge", pair_address);
         update_gauge(pair_address, gauge, tvl, &chain, Arc::clone(&client), &conn).await?;
+    } else {
+        info!("Pair {} is not a gauge", pair_address);
     }
 
     Ok(())

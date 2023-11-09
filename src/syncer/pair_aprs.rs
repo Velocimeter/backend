@@ -121,7 +121,7 @@ pub async fn update_pair_aprs(
                     logo_url: ActiveValue::set(reward_token.logoURI),
                     max_apr: ActiveValue::not_set(),
                     min_apr: ActiveValue::not_set(),
-                    token_address: ActiveValue::set(formatted_reward_token_addy),
+                    token_address: ActiveValue::set(formatted_reward_token_addy.to_lowercase()),
                     symbol: ActiveValue::set(reward_token.symbol),
                 };
 
@@ -140,7 +140,7 @@ pub async fn update_pair_aprs(
                     logo_url: ActiveValue::set(reward_token.logoURI),
                     max_apr: ActiveValue::set(Some(max_apr)),
                     min_apr: ActiveValue::set(Some(min_apr)),
-                    token_address: ActiveValue::set(formatted_reward_token_addy),
+                    token_address: ActiveValue::set(formatted_reward_token_addy.to_lowercase()),
                     symbol: ActiveValue::set(reward_token.symbol),
                 };
 
@@ -157,7 +157,7 @@ pub async fn update_pair_aprs(
             if tvl == 0.0 {
                 apr = 0.0;
             } else {
-                apr = reward * reward_token.price / tvl * 100.0;
+                apr = reward * reward_token.price / tvl * 100.0 * 365.0;
             }
 
             let apr = ActiveAprsModel {
@@ -167,7 +167,7 @@ pub async fn update_pair_aprs(
                 logo_url: ActiveValue::set(reward_token.logoURI),
                 max_apr: ActiveValue::not_set(),
                 min_apr: ActiveValue::not_set(),
-                token_address: ActiveValue::set(formatted_reward_token_addy),
+                token_address: ActiveValue::set(formatted_reward_token_addy.to_lowercase()),
                 symbol: ActiveValue::set(reward_token.symbol),
             };
 
@@ -239,7 +239,7 @@ async fn clean_up_stale_rewards(
 
     let reward_tokens = reward_tokens
         .into_iter()
-        .map(|t_a| to_checksum(&t_a, None))
+        .map(|t_a| to_checksum(&t_a, None).to_lowercase())
         .collect::<Vec<String>>();
 
     for apr in aprs {

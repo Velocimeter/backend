@@ -5,7 +5,7 @@ use backend::database::assets::{
     ActiveModel as ActiveAsset, Column as AssetColumn, Entity as Assets,
 };
 use ethers::types::H160;
-use ethers::utils::{format_ether, format_units, parse_units, to_checksum};
+use ethers::utils::{format_units, parse_units, to_checksum};
 use ethers::{
     abi::Address,
     contract::Multicall,
@@ -31,7 +31,7 @@ pub async fn find_asset(
     conn: &Arc<DatabaseConnection>,
 ) -> Result<AssetWithPrice> {
     let chain_id = chain.get_chain_data().id;
-    let asset = Assets::find_by_id((address.to_string(), chain_id))
+    let asset = Assets::find_by_id((address.to_string().to_lowercase(), chain_id))
         .one(conn.as_ref())
         .await?;
     match asset {
@@ -78,7 +78,7 @@ pub async fn update_assets_from_tokenlist(
         let price =
             update_asset_price(&asset.address, asset.decimals, &chain, client, &conn).await?;
         let asset = ActiveAsset {
-            address: ActiveValue::set(asset.address.to_string()),
+            address: ActiveValue::set(asset.address.to_string().to_lowercase()),
             chain_id: ActiveValue::set(chain_id),
             decimals: ActiveValue::set(asset.decimals),
             logo_url: ActiveValue::set(asset.logoURI.to_string()),
@@ -128,7 +128,7 @@ pub async fn update_asset(
     let price = update_asset_price(address, decimals.into(), chain, client, &conn).await?;
 
     let asset = ActiveAsset {
-        address: ActiveValue::set(address.to_string()),
+        address: ActiveValue::set(address.to_string().to_lowercase()),
         chain_id: ActiveValue::set(chain_id),
         decimals: ActiveValue::set(decimals.into()),
         logo_url: ActiveValue::set("".to_string()),
@@ -386,9 +386,7 @@ pub async fn check_option_discount(address: &String, client: Arc<Provider<Http>>
 
     let discount = o_token.discount().call().await?;
 
-    let discount = format_ether(discount).parse::<f64>()?;
-
-    Ok(discount)
+    Ok(discount.as_u64() as f64)
 }
 
 ///
@@ -403,9 +401,7 @@ pub async fn check_option_ve_discount(
 
     let discount = o_token.ve_discount().call().await?;
 
-    let discount = format_ether(discount).parse::<f64>()?;
-
-    Ok(discount)
+    Ok(discount.as_u64() as f64)
 }
 
 ///

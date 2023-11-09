@@ -84,7 +84,7 @@ pub async fn update_gauge(
         };
 
     let gauge = ActiveGauge {
-        address: ActiveValue::set(gauge_address.to_string()),
+        address: ActiveValue::set(to_checksum(&gauge_address, None)),
         pair_address: ActiveValue::set(to_checksum(&pair_address, None)),
         chain_id: ActiveValue::set(chain.get_chain_data().id),
         decimals: ActiveValue::set(18),

@@ -96,7 +96,7 @@ pub async fn update_bribe(
 
         let bribe = ActiveBribe {
             bribe_address: ActiveValue::Set(to_checksum(&bribe_address, None)),
-            token_address: ActiveValue::Set(bribe_token_address),
+            token_address: ActiveValue::Set(bribe_token_address.to_lowercase()),
             pair_address: ActiveValue::Set(to_checksum(&pair_address, None)),
             chain_id: ActiveValue::Set(chain.get_chain_data().id),
             reward_amount: ActiveValue::Set(reward_amount),
