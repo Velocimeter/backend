@@ -21,8 +21,8 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::assets::Entity",
-        from = "(Column::TokenAddress, Column::TokenAddress, Column::ChainId, Column::ChainId)",
-        to = "(super::assets::Column::Address, super::assets::Column::ChainId, super::assets::Column::Address, super::assets::Column::ChainId)",
+        from = "(Column::TokenAddress, Column::ChainId)",
+        to = "(super::assets::Column::Address, super::assets::Column::ChainId)",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]

@@ -10,7 +10,7 @@ use backend::database::pairs::{Column as PairsColumn, Entity as Pairs};
 
 use crate::server::{
     internal_error,
-    types::{PairResponse, PairsResponse},
+    types::{BribeResponse, PairResponse, PairsResponse},
 };
 
 // basic handler that responds with a static string
@@ -32,7 +32,7 @@ pub async fn give_pairs(
         .map_err(internal_error)?;
 
     for pair in pairs.into_iter() {
-        let gauge = Gauges::find_by_id((pair.address.to_string(), chain_id))
+        let gauge = Gauges::find_by_id((pair.gauge_address.to_owned(), chain_id))
             .one(&conn)
             .await
             .map_err(internal_error)?;
@@ -42,9 +42,15 @@ pub async fn give_pairs(
                     .eq(chain_id)
                     .and(BribesColumn::PairAddress.eq(&pair.address)),
             )
+            .find_also_related(Assets)
             .all(&conn)
             .await
             .map_err(internal_error)?;
+
+        let bribes_with_tokens = bribes
+            .into_iter()
+            .map(|(bribe, token)| BribeResponse { bribe, token })
+            .collect();
 
         let aprs = Aprs::find()
             .filter(
@@ -55,7 +61,7 @@ pub async fn give_pairs(
             .all(&conn)
             .await
             .map_err(internal_error)?;
-        let killed_gauges = KilledGauges::find_by_id((pair.address.to_string(), chain_id))
+        let killed_gauges = KilledGauges::find_by_id((pair.address.to_owned(), chain_id))
             .all(&conn)
             .await
             .map_err(internal_error)?;
@@ -63,7 +69,7 @@ pub async fn give_pairs(
         let pair = PairResponse {
             pair,
             gauge,
-            bribes,
+            bribes: bribes_with_tokens,
             aprs,
             killed_gauges,
         };
@@ -99,7 +105,7 @@ pub async fn give_asset(
         .filter(
             AssetsColumn::ChainId
                 .eq(chain_id)
-                .and(AssetsColumn::Address.eq(address)),
+                .and(AssetsColumn::Address.eq(address.to_lowercase())),
         )
         .one(&conn)
         .await
