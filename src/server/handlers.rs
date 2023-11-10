@@ -1,7 +1,7 @@
 use axum::{extract::Path, http::StatusCode, response::Json, Extension};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
-use backend::database::aprs::{Column as AprsColumn, Entity as Aprs};
+use backend::database::aprs::Entity as Aprs;
 use backend::database::assets::{Column as AssetsColumn, Entity as Assets, Model as Asset};
 use backend::database::bribes::{Column as BribesColumn, Entity as Bribes};
 use backend::database::gauges::Entity as Gauges;
@@ -27,11 +27,12 @@ pub async fn give_pairs(
 
     let pairs = Pairs::find()
         .filter(PairsColumn::ChainId.eq(chain_id))
+        .find_with_related(Aprs)
         .all(&conn)
         .await
         .map_err(internal_error)?;
 
-    for pair in pairs.into_iter() {
+    for (pair, aprs) in pairs.into_iter() {
         let gauge = Gauges::find_by_id((pair.gauge_address.to_owned(), chain_id))
             .one(&conn)
             .await
@@ -52,15 +53,6 @@ pub async fn give_pairs(
             .map(|(bribe, token)| BribeResponse { bribe, token })
             .collect();
 
-        let aprs = Aprs::find()
-            .filter(
-                AprsColumn::ChainId
-                    .eq(chain_id)
-                    .and(AprsColumn::PairAddress.eq(&pair.address)),
-            )
-            .all(&conn)
-            .await
-            .map_err(internal_error)?;
         let killed_gauges = KilledGauges::find_by_id((pair.address.to_owned(), chain_id))
             .all(&conn)
             .await
