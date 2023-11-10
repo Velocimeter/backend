@@ -6,7 +6,7 @@ use ethers::{
     utils::to_checksum,
 };
 use eyre::Result;
-use sea_orm::{sea_query, ActiveValue, DatabaseConnection, EntityTrait};
+use sea_orm::{sea_query, ActiveValue, DatabaseConnection, DbErr, EntityTrait};
 use std::sync::Arc;
 use tracing::{error, info, instrument};
 
@@ -15,7 +15,7 @@ use backend::database::killed_gauges::{
     ActiveModel as ActiveKilledGauge, Column as KilledGaugesColumn, Entity as KilledGauges,
 };
 
-use crate::{server::internal_error, syncer::types::Chain};
+use crate::syncer::types::Chain;
 
 pub async fn update_killed_gauges(chain: Chain, conn: Arc<DatabaseConnection>) -> Result<()> {
     info!(
@@ -123,13 +123,17 @@ async fn write_killed_gauge(
         )
         .exec(conn.as_ref())
         .await
-        .map_err(internal_error)
     {
         Ok(_) => {}
-        Err(e) => {
-            error!("Error writing to DB: {:?}", e);
-            return Err(e);
-        }
+        Err(e) => match e {
+            DbErr::RecordNotInserted => {
+                info!("Killed gauge already exists");
+            }
+            _ => {
+                error!("Error writing killed gauge to DB: {}", e);
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        },
     }
     info!("DB write successful");
     Ok(())
