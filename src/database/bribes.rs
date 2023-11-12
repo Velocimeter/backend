@@ -13,6 +13,11 @@ pub struct Model {
     pub chain_id: i32,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub token_address: String,
+    #[sea_orm(column_type = "Text")]
+    pub symbol: String,
+    pub token_decimals: i32,
+    #[sea_orm(column_type = "Text")]
+    pub logo_url: String,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub pair_address: String,
 }
@@ -22,15 +27,15 @@ pub enum Relation {
     #[sea_orm(
         belongs_to = "super::assets::Entity",
         from = "(Column::TokenAddress, Column::ChainId)",
-        to = "(super::assets::Column::Address, super::assets::Column::ChainId)",
+        to = "(super::assets::Column::ChainId, super::assets::Column::Address)",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
     Assets,
     #[sea_orm(
         belongs_to = "super::pairs::Entity",
-        from = "(Column::PairAddress, Column::PairAddress, Column::ChainId, Column::ChainId)",
-        to = "(super::pairs::Column::ChainId, super::pairs::Column::Address, super::pairs::Column::ChainId, super::pairs::Column::Address)",
+        from = "(Column::PairAddress, Column::ChainId)",
+        to = "(super::pairs::Column::Address, super::pairs::Column::ChainId)",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]

@@ -36,16 +36,16 @@ pub enum Relation {
     Aprs,
     #[sea_orm(
         belongs_to = "super::assets::Entity",
-        from = "(Column::Token0Address, Column::Token0Address, Column::ChainId, Column::ChainId)",
-        to = "(super::assets::Column::ChainId, super::assets::Column::Address, super::assets::Column::ChainId, super::assets::Column::Address)",
+        from = "(Column::Token0Address, Column::ChainId)",
+        to = "(super::assets::Column::ChainId, super::assets::Column::Address)",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
     Assets2,
     #[sea_orm(
         belongs_to = "super::assets::Entity",
-        from = "(Column::Token1Address, Column::Token1Address, Column::ChainId, Column::ChainId)",
-        to = "(super::assets::Column::Address, super::assets::Column::ChainId, super::assets::Column::Address, super::assets::Column::ChainId)",
+        from = "(Column::Token1Address, Column::ChainId)",
+        to = "(super::assets::Column::Address, super::assets::Column::ChainId)",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
