@@ -25,7 +25,6 @@ pub async fn give_pairs(
 ) -> Result<Json<PairsResponse>, StatusCode> {
     let pairs = Pairs::find()
         .filter(PairsColumn::ChainId.eq(chain_id))
-        // .find_with_related(Aprs)
         .all(&conn)
         .await
         .map_err(internal_error)?;
