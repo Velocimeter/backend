@@ -32,7 +32,7 @@ pub async fn server() {
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
-        .unwrap();
+        .expect("Could not start server");
 }
 
 /// Utility function for mapping any error into a `500 Internal Server Error`

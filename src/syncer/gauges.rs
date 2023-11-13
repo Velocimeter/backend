@@ -148,7 +148,7 @@ async fn update_gauge_aprs(
 
     let (weekly, supply) = multicall.call::<(U256, U256)>().await?;
 
-    let growth = minter.calculate_growth(weekly).call().await.unwrap();
+    let growth = minter.calculate_growth(weekly).call().await?;
 
     if supply == U256::zero() {
         return Ok((0.0, 0.0));
