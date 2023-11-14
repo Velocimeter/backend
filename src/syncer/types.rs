@@ -170,7 +170,7 @@ pub struct DexscreenerPair {
     pub volume: DexscreenerVolume,
     pub priceChange: DexscreenerPriceChange,
     pub liquidity: Option<DexscreenerLiquidity>,
-    pub fdv: Option<String>,
+    pub fdv: Option<f64>,
     pub pairCreatedAt: Option<i64>,
 }
 
@@ -197,24 +197,24 @@ pub struct DexscreenerTxnsData {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DexscreenerVolume {
-    pub m5: String,
-    pub h1: String,
-    pub h6: String,
-    pub h24: String,
+    pub m5: f64,
+    pub h1: f64,
+    pub h6: f64,
+    pub h24: f64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DexscreenerPriceChange {
-    pub m5: String,
-    pub h1: String,
-    pub h6: String,
-    pub h24: String,
+    pub m5: f64,
+    pub h1: f64,
+    pub h6: f64,
+    pub h24: f64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 
 pub struct DexscreenerLiquidity {
-    pub usd: Option<String>,
-    pub base: String,
-    pub quote: String,
+    pub usd: Option<i32>,
+    pub base: i32,
+    pub quote: i32,
 }

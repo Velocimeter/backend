@@ -219,13 +219,16 @@ async fn get_asset_price(
 ///
 async fn get_aggregated_price_in_stables(address: &String, chain: Chain) -> Result<f64> {
     let chain_name = &chain.get_chain_data().geckoterminal_name;
-    let chain_id = chain.get_chain_data().id;
     let price = geckoterminal(address, chain_name).await;
     match price {
-        Ok(price) => return Ok(price),
+        Ok(price) => {
+            if price > 0.0 {
+                return Ok(price);
+            }
+        }
         Err(_) => {}
     }
-    let price = dexscreener(address, chain_id).await;
+    let price = dexscreener(address).await;
     match price {
         Ok(price) => return Ok(price),
         Err(_) => {}
@@ -251,7 +254,7 @@ async fn geckoterminal(address: &String, chain_name: &String) -> Result<f64> {
 ///
 /// Get price from dexscreener.
 ///
-async fn dexscreener(address: &String, chain_id: i32) -> Result<f64> {
+async fn dexscreener(address: &String) -> Result<f64> {
     let url = format!("https://api.dexscreener.com/latest/dex/tokens/{}", address);
     let http_client = reqwest::Client::builder().build()?;
     let res = http_client.get(url).send().await?;
@@ -268,8 +271,7 @@ async fn dexscreener(address: &String, chain_id: i32) -> Result<f64> {
     });
 
     for prices in pairs {
-        if prices.baseToken.address == address.to_string() && prices.chainId == chain_id.to_string()
-        {
+        if prices.baseToken.address.to_lowercase() == address.to_string().to_lowercase() {
             let price = prices.priceUsd.unwrap().parse::<f64>()?;
             return Ok(price);
         }
