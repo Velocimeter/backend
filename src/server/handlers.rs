@@ -52,15 +52,9 @@ pub async fn give_pairs(
         .zip(aprs.into_iter())
         .zip(bribes.into_iter())
         .zip(killed_gauges.into_iter())
-        .map(
-            |((((pair, gauges), aprs), bribes), killed_gauges)| PairResponse {
-                pair,
-                gauge: gauges.first().cloned(),
-                aprs,
-                bribes,
-                killed_gauges,
-            },
-        )
+        .map(|((((pair, gauges), aprs), bribes), killed_gauges)| {
+            PairResponse::new(pair, gauges.first().cloned(), aprs, bribes, killed_gauges)
+        })
         .collect();
 
     let res = PairsResponse { pairs: pairs_res };
