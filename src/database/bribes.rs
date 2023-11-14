@@ -13,13 +13,10 @@ pub struct Model {
     pub chain_id: i32,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub token_address: String,
-    #[sea_orm(column_type = "Text")]
-    pub symbol: String,
-    pub token_decimals: i32,
-    #[sea_orm(column_type = "Text")]
-    pub logo_url: String,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub pair_address: String,
+    #[sea_orm(column_type = "Json")]
+    pub token: serde_json::Value,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -9,6 +9,7 @@ use eyre::Result;
 use sea_orm::{
     sea_query, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter,
 };
+use serde_json::json;
 use std::sync::Arc;
 use tracing::{error, info, instrument};
 
@@ -97,9 +98,7 @@ pub async fn update_bribe(
         let bribe = ActiveBribe {
             bribe_address: ActiveValue::Set(to_checksum(&bribe_address, None)),
             token_address: ActiveValue::Set(bribe_token_address.to_lowercase()),
-            symbol: ActiveValue::Set(token.symbol),
-            token_decimals: ActiveValue::Set(token.decimals),
-            logo_url: ActiveValue::Set(token.logoURI),
+            token: ActiveValue::Set(json!(token)),
             pair_address: ActiveValue::Set(to_checksum(&pair_address, None)),
             chain_id: ActiveValue::Set(chain.get_chain_data().id),
             reward_amount: ActiveValue::Set(reward_amount),
