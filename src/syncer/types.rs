@@ -1,4 +1,4 @@
-use crate::syncer::config::*;
+use backend::config::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]

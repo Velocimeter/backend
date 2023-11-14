@@ -7,7 +7,6 @@ use tracing::{info, instrument};
 
 mod assets;
 mod bribes;
-mod config;
 mod gauges;
 mod killed_gauges;
 mod pair_aprs;

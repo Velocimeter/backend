@@ -1,6 +1,7 @@
 use axum::{extract::Path, http::StatusCode, response::Json, Extension};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, LoaderTrait, QueryFilter};
 
+use backend::config::{BASE_ROUTE_TOKEN, CANTO_ROUTE_TOKEN, FANTOM_ROUTE_TOKEN};
 use backend::database::aprs::Entity as Aprs;
 use backend::database::assets::{Column as AssetsColumn, Entity as Assets, Model as Asset};
 use backend::database::bribes::Entity as Bribes;
@@ -69,6 +70,25 @@ pub async fn give_assets(
 ) -> Result<Json<Vec<Asset>>, StatusCode> {
     let res = Assets::find()
         .filter(AssetsColumn::ChainId.eq(chain_id))
+        .all(&conn)
+        .await
+        .map_err(internal_error)?;
+
+    Ok(Json(res))
+}
+
+#[axum_macros::debug_handler]
+pub async fn give_routes(
+    Path(chain_id): Path<i32>,
+    Extension(conn): Extension<DatabaseConnection>,
+) -> Result<Json<Vec<Asset>>, StatusCode> {
+    let route_token_address = match chain_id {
+        8453 => BASE_ROUTE_TOKEN,
+        250 => FANTOM_ROUTE_TOKEN,
+        7700 => CANTO_ROUTE_TOKEN,
+        _ => return Err(StatusCode::NOT_FOUND),
+    };
+    let res = Assets::find_by_id((route_token_address.to_lowercase(), chain_id))
         .all(&conn)
         .await
         .map_err(internal_error)?;
