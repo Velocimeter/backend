@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS pairs (
   symbol TEXT NOT NULL,
   decimals INTEGER NOT NULL,
   stable BOOLEAN NOT NULL,
+  fee FLOAT NOT NULL,
   total_supply FLOAT NOT NULL,
   reserve0 FLOAT NOT NULL,
   reserve1 FLOAT NOT NULL,

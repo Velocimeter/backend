@@ -15,6 +15,8 @@ pub struct Model {
     pub decimals: i32,
     pub stable: bool,
     #[sea_orm(column_type = "Double")]
+    pub fee: f64,
+    #[sea_orm(column_type = "Double")]
     pub total_supply: f64,
     #[sea_orm(column_type = "Double")]
     pub reserve0: f64,

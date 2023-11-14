@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use ethers::{
     abi::Address,
-    contract::Multicall,
+    contract::{ContractCall, Multicall},
     prelude::{Http, Provider},
     types::{H160, U256},
     utils::{format_ether, format_units, to_checksum},
@@ -30,15 +30,37 @@ pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Resu
     let factory_address = chain.get_chain_data().factory_address.parse::<Address>()?;
     let factory = Factory::new(factory_address, Arc::clone(&client));
     let all_pairs = factory.all_pairs_length().call().await?;
-    let mut pair_addresses: Vec<H160> = vec![];
 
-    for i in 0..all_pairs.as_u64() {
-        let pair_address = factory.all_pairs(i.into()).call().await?;
-        pair_addresses.push(pair_address);
-    }
+    let calls: Vec<ContractCall<Provider<Http>, Address>> = (0..all_pairs.as_u64())
+        .map(|i| factory.all_pairs(i.into()))
+        .collect();
+
+    let mut multicall = Multicall::<Provider<Http>>::new(
+        client.clone(),
+        Some(
+            chain
+                .get_chain_data()
+                .multicall_address
+                .parse::<Address>()
+                .expect("Address is set by hand"),
+        ),
+    )
+    .await?;
+
+    multicall.add_calls(false, calls);
+
+    let pair_addresses: Vec<Address> = multicall.call_array().await?;
 
     for pair_address in pair_addresses {
-        match update_pair(chain.clone(), pair_address, Arc::clone(&client), &conn).await {
+        match update_pair(
+            pair_address,
+            &factory,
+            chain.clone(),
+            Arc::clone(&client),
+            &conn,
+        )
+        .await
+        {
             Ok(_) => {}
             Err(e) => {
                 info!("Error updating pair {}: {:?}", pair_address, e);
@@ -49,10 +71,11 @@ pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Resu
     Ok(())
 }
 
-#[instrument(skip(chain, client, conn))]
+#[instrument(skip(factory_contract, chain, client, conn))]
 async fn update_pair(
-    chain: Chain,
     pair_address: H160,
+    factory_contract: &Factory<Provider<Http>>,
+    chain: Chain,
     client: Arc<Provider<Http>>,
     conn: &Arc<DatabaseConnection>,
 ) -> Result<()> {
@@ -76,14 +99,34 @@ async fn update_pair(
         false,
         [pair.token_0(), pair.token_1(), voter.gauges(pair_address)],
     );
-    multicall.add_call(pair.total_supply(), false);
+    multicall.add_calls(
+        false,
+        [pair.total_supply(), factory_contract.get_fee(pair_address)],
+    );
     multicall.add_call(pair.symbol(), false);
     multicall.add_call(pair.stable(), false);
 
-    let ((reserve0, reserve1, _timestamp), token_0, token_1, gauge, total_supply, symbol, stable) =
-        multicall
-            .call::<((U256, U256, U256), H160, H160, H160, U256, String, bool)>()
-            .await?;
+    let (
+        (reserve0, reserve1, _timestamp),
+        token_0,
+        token_1,
+        gauge,
+        total_supply,
+        fee,
+        symbol,
+        stable,
+    ) = multicall
+        .call::<(
+            (U256, U256, U256),
+            H160,
+            H160,
+            H160,
+            U256,
+            U256,
+            String,
+            bool,
+        )>()
+        .await?;
 
     let token_0 = find_asset(to_checksum(&token_0, None), &chain, conn).await?;
     let token_1 = find_asset(to_checksum(&token_1, None), &chain, conn).await?;
@@ -95,7 +138,7 @@ async fn update_pair(
         .unwrap()
         .parse::<f64>()?;
     let total_supply = format_ether(total_supply).parse::<f64>()?;
-
+    let fee = fee.as_u64() as f64 / 100.0;
     let tvl = get_tvl(reserve0, reserve1, token_0.price, token_1.price);
 
     let pair = ActivePair {
@@ -104,6 +147,7 @@ async fn update_pair(
         address: ActiveValue::Set(to_checksum(&pair_address, None)),
         gauge_address: ActiveValue::Set(to_checksum(&gauge, None)),
         symbol: ActiveValue::Set(symbol),
+        fee: ActiveValue::Set(fee),
         token0_address: ActiveValue::Set(token_0.address.to_lowercase()),
         token0: ActiveValue::Set(json!(token_0)),
         token1_address: ActiveValue::Set(token_1.address.to_lowercase()),
