@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS pairs (
   gauge_address TEXT NOT NULL,
   tvl FLOAT NOT NULL,
   token0_address TEXT NOT NULL,
+  token0 json NOT NULL,
   token1_address TEXT NOT NULL,
+  token1 json NOT NULL,
   PRIMARY KEY (address, chain_id),
   FOREIGN KEY (token0_address, chain_id) REFERENCES assets (address, chain_id),
   FOREIGN KEY (token1_address, chain_id) REFERENCES assets (address, chain_id)

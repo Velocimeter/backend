@@ -28,6 +28,10 @@ pub struct Model {
     pub token0_address: String,
     #[sea_orm(column_type = "Text")]
     pub token1_address: String,
+    #[sea_orm(column_type = "Json")]
+    pub token0: serde_json::Value,
+    #[sea_orm(column_type = "Json")]
+    pub token1: serde_json::Value,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

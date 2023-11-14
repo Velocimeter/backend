@@ -8,6 +8,7 @@ use ethers::{
 };
 use eyre::Result;
 use sea_orm::{sea_query, ActiveValue, DatabaseConnection, EntityTrait};
+use serde_json::json;
 use std::sync::Arc;
 use tracing::{error, info, instrument};
 
@@ -104,7 +105,9 @@ async fn update_pair(
         gauge_address: ActiveValue::Set(to_checksum(&gauge, None)),
         symbol: ActiveValue::Set(symbol),
         token0_address: ActiveValue::Set(token_0.address.to_lowercase()),
+        token0: ActiveValue::Set(json!(token_0)),
         token1_address: ActiveValue::Set(token_1.address.to_lowercase()),
+        token1: ActiveValue::Set(json!(token_1)),
         reserve0: ActiveValue::Set(reserve0),
         reserve1: ActiveValue::Set(reserve1),
         total_supply: ActiveValue::Set(total_supply),
