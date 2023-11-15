@@ -8,7 +8,7 @@ use ethers::{
 use eyre::Result;
 use sea_orm::{sea_query, ActiveValue, DatabaseConnection, EntityTrait};
 use std::sync::Arc;
-use tracing::{error, info, instrument};
+use tracing::{error, info};
 
 use crate::server::internal_error;
 use crate::syncer::types::Chain;
@@ -18,7 +18,6 @@ use backend::database::gauges::{
     ActiveModel as ActiveGauge, Column as GaugesColumn, Entity as Gauges,
 };
 
-#[instrument(skip(chain, client, conn))]
 pub async fn update_gauge(
     pair_address: H160,
     gauge_address: H160,
@@ -78,13 +77,18 @@ pub async fn update_gauge(
         match update_gauge_aprs(min_tbv, max_tbv, votes, chain, Arc::clone(&client), conn).await {
             Ok((min_apr, max_apr)) => (min_apr, max_apr),
             Err(e) => {
-                info!("Error updating gauge APRs: {:?}", e);
+                info!(
+                    "Error updating gauge APRs: {:?}, pair_address {:?}",
+                    e, pair_address
+                );
                 (0.0, 0.0)
             }
         };
 
+    let gauge_address_checksumed = to_checksum(&gauge_address, None);
+
     let gauge = ActiveGauge {
-        address: ActiveValue::set(to_checksum(&gauge_address, None)),
+        address: ActiveValue::set(gauge_address_checksumed.to_owned()),
         pair_address: ActiveValue::set(to_checksum(&pair_address, None)),
         chain_id: ActiveValue::set(chain.get_chain_data().id),
         decimals: ActiveValue::set(18),
@@ -101,7 +105,7 @@ pub async fn update_gauge(
 
     update_pair_aprs(pair_address, gauge_address, tvl, chain, client, conn).await?;
 
-    match write_gauge(conn, gauge).await {
+    match write_gauge(conn, gauge_address_checksumed, gauge).await {
         Ok(_) => {}
         Err(e) => {
             error!("Error writing to DB: {:?}", e);
@@ -174,8 +178,11 @@ async fn update_gauge_aprs(
     Ok((min_apr, max_apr))
 }
 
-#[instrument(skip(conn))]
-async fn write_gauge(conn: &Arc<DatabaseConnection>, gauge: ActiveGauge) -> Result<(), StatusCode> {
+async fn write_gauge(
+    conn: &Arc<DatabaseConnection>,
+    gauge_address: String,
+    gauge: ActiveGauge,
+) -> Result<(), StatusCode> {
     match Gauges::insert(gauge)
         .on_conflict(
             sea_query::OnConflict::columns([GaugesColumn::Address, GaugesColumn::ChainId])
@@ -197,10 +204,10 @@ async fn write_gauge(conn: &Arc<DatabaseConnection>, gauge: ActiveGauge) -> Resu
     {
         Ok(_) => {}
         Err(e) => {
-            error!("Error writing to DB: {:?}", e);
+            error!("Error writing to DB: {:?}, gauge {}", e, gauge_address);
             return Err(e);
         }
     }
-    info!("DB write successful");
+    info!("Gauge {} DB write successful", gauge_address);
     Ok(())
 }

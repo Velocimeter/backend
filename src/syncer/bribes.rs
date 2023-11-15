@@ -11,7 +11,7 @@ use sea_orm::{
 };
 use serde_json::json;
 use std::sync::Arc;
-use tracing::{error, info, instrument};
+use tracing::{error, info};
 
 use crate::server::internal_error;
 use crate::syncer::types::Chain;
@@ -95,8 +95,10 @@ pub async fn update_bribe(
 
         let reward_amount = format_units(left, token.decimals)?.parse::<f64>()?;
 
+        let bribe_address = to_checksum(&bribe_address, None);
+
         let bribe = ActiveBribe {
-            bribe_address: ActiveValue::Set(to_checksum(&bribe_address, None)),
+            bribe_address: ActiveValue::Set(bribe_address.to_owned()),
             token_address: ActiveValue::Set(bribe_token_address.to_lowercase()),
             token: ActiveValue::Set(json!(token)),
             pair_address: ActiveValue::Set(to_checksum(&pair_address, None)),
@@ -104,7 +106,7 @@ pub async fn update_bribe(
             reward_amount: ActiveValue::Set(reward_amount),
         };
 
-        match write_bribe(conn, bribe).await {
+        match write_bribe(conn, bribe_address, bribe).await {
             Ok(_) => {}
             Err(e) => {
                 error!("Error writing to DB: {:?}", e);
@@ -150,7 +152,7 @@ async fn clean_up_stale_bribes(
                     info!("Deleted stale bribe entry: b_a {}, t_a{}", b_a, t_a);
                 }
                 Err(e) => {
-                    error!("Error deleting stale bribe entry: {:?}", e);
+                    error!("Error deleting stale bribe entry: {:?}, address {}", e, b_a);
                 }
             }
         }
@@ -162,8 +164,11 @@ async fn clean_up_stale_bribes(
 ///
 /// Write bribe to DB.
 ///
-#[instrument(skip(conn))]
-async fn write_bribe(conn: &Arc<DatabaseConnection>, bribe: ActiveBribe) -> Result<(), StatusCode> {
+async fn write_bribe(
+    conn: &Arc<DatabaseConnection>,
+    bribe_address: String,
+    bribe: ActiveBribe,
+) -> Result<(), StatusCode> {
     match Bribes::insert(bribe)
         .on_conflict(
             sea_query::OnConflict::columns([
@@ -180,10 +185,10 @@ async fn write_bribe(conn: &Arc<DatabaseConnection>, bribe: ActiveBribe) -> Resu
     {
         Ok(_) => {}
         Err(e) => {
-            error!("Error writing to DB: {:?}", e);
+            error!("Error writing bribe {} to DB: {:?}", bribe_address, e);
             return Err(e);
         }
     }
-    info!("DB write successful");
+    info!("Bribe {} DB write successful", bribe_address);
     Ok(())
 }

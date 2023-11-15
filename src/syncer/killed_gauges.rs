@@ -17,6 +17,7 @@ use backend::database::killed_gauges::{
 
 use crate::syncer::types::Chain;
 
+#[instrument(skip_all)]
 pub async fn update_killed_gauges(chain: Chain, conn: Arc<DatabaseConnection>) -> Result<()> {
     info!(
         "Collecting killed gauges for chain id: {}",
@@ -107,7 +108,6 @@ async fn write_killed_gauges(
     Ok(())
 }
 
-#[instrument(skip(conn))]
 async fn write_killed_gauge(
     conn: &Arc<DatabaseConnection>,
     killed_gauge: ActiveKilledGauge,
@@ -135,6 +135,6 @@ async fn write_killed_gauge(
             }
         },
     }
-    info!("DB write successful");
+    info!("Killed gauges DB write successful");
     Ok(())
 }

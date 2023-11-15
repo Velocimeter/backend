@@ -2,7 +2,7 @@ use async_recursion::async_recursion;
 use axum::http::StatusCode;
 use backend::bindings::{oTOKEN, Router, ERC20};
 use backend::database::assets::{
-    ActiveModel as ActiveAsset, Column as AssetColumn, Entity as Assets,
+    ActiveModel as ActiveAsset, Column as AssetColumn, Column as AssetsColumn, Entity as Assets,
 };
 use ethers::types::H160;
 use ethers::utils::{format_units, parse_units, to_checksum};
@@ -12,19 +12,17 @@ use ethers::{
     prelude::{Http, Provider},
 };
 use eyre::Result;
-use sea_orm::{sea_query, ActiveValue, DatabaseConnection, EntityTrait};
+use sea_orm::{sea_query, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::sync::Arc;
 use tracing::{error, info, instrument};
 
 use crate::server::internal_error;
+use crate::syncer::types::AssetWithPrice;
 use crate::syncer::types::{Asset, Chain, DexscreenerResponse, GeckoTerminalResponse};
-
-use super::types::AssetWithPrice;
 
 ///
 /// Return asset from DB if exists, otherwise update asset, save to DB and return.
 ///
-#[instrument(skip(chain, conn))]
 pub async fn find_asset(
     address: String,
     chain: &Chain,
@@ -57,7 +55,7 @@ pub async fn find_asset(
 ///
 /// Update all assets for a given chain and tokenlist. Save to DB.
 ///
-#[instrument(skip(chain, conn))]
+#[instrument(skip_all)]
 pub async fn update_assets_from_tokenlist(
     chain: &Chain,
     conn: &Arc<DatabaseConnection>,
@@ -70,14 +68,13 @@ pub async fn update_assets_from_tokenlist(
     let token_list = &chain.get_chain_data().tokenlists_url;
     let res = http_client.get(token_list).send().await?;
     let res = res.json::<Vec<Asset>>().await?;
-    info!("Assets: {}", res.len());
+    info!("Assets from tokenlist: {}", res.len());
     for asset in res {
-        let chain = chain.clone();
         let chain_id = chain.get_chain_data().id;
         let client = Arc::clone(&client);
         let price =
             update_asset_price(&asset.address, asset.decimals, &chain, client, &conn).await?;
-        let asset = ActiveAsset {
+        let active_asset = ActiveAsset {
             address: ActiveValue::set(asset.address.to_string().to_lowercase()),
             chain_id: ActiveValue::set(chain_id),
             decimals: ActiveValue::set(asset.decimals),
@@ -86,7 +83,68 @@ pub async fn update_assets_from_tokenlist(
             symbol: ActiveValue::set(asset.symbol.to_string()),
             price: ActiveValue::set(price),
         };
-        write_asset(conn, asset).await.unwrap();
+        write_asset(conn, asset.address, active_asset)
+            .await
+            .unwrap();
+    }
+
+    Ok(())
+}
+
+///
+/// Update assets that has been already written to db, but need a price update for next iteration. Tokens from the tokenlist get updated anyway. Save to DB.
+///
+#[instrument(skip_all)]
+pub async fn update_other_db_assets_prices(
+    chain: &Chain,
+    conn: &Arc<DatabaseConnection>,
+) -> Result<()> {
+    let chain_id = chain.get_chain_data().id;
+    info!("Updating other db assets prices: {} chain id", chain_id);
+
+    let http_client = reqwest::Client::builder().build()?;
+    let token_list = &chain.get_chain_data().tokenlists_url;
+    let res = http_client.get(token_list).send().await?;
+    let tokenlist_assets_addresses: Vec<String> = res
+        .json::<Vec<Asset>>()
+        .await?
+        .into_iter()
+        .map(|asset| asset.address.to_lowercase())
+        .collect();
+    let res = Assets::find()
+        .filter(
+            AssetsColumn::ChainId
+                .eq(chain_id)
+                .and(AssetColumn::Address.is_not_in(tokenlist_assets_addresses)),
+        )
+        .all(conn.as_ref())
+        .await?;
+
+    info!("Other assets from db: {}", res.len());
+    if res.len() == 0 {
+        return Ok(());
+    }
+
+    let provider = Provider::<Http>::try_from(chain.get_chain_data().rpc_url.to_string())?;
+    let client = Arc::new(provider);
+
+    for asset in res {
+        let chain_id = chain.get_chain_data().id;
+        let client = Arc::clone(&client);
+        let price =
+            update_asset_price(&asset.address, asset.decimals, &chain, client, &conn).await?;
+        let active_asset = ActiveAsset {
+            address: ActiveValue::set(asset.address.to_string().to_lowercase()),
+            chain_id: ActiveValue::set(chain_id),
+            decimals: ActiveValue::set(asset.decimals),
+            logo_url: ActiveValue::set(asset.logo_url.to_string()),
+            name: ActiveValue::set(asset.name.to_string()),
+            symbol: ActiveValue::set(asset.symbol.to_string()),
+            price: ActiveValue::set(price),
+        };
+        write_asset(conn, asset.address, active_asset)
+            .await
+            .unwrap();
     }
 
     Ok(())
@@ -96,7 +154,6 @@ pub async fn update_assets_from_tokenlist(
 /// Update asset for a given address and chain, save to DB and return.
 ///
 #[async_recursion]
-#[instrument(skip(chain, conn))]
 pub async fn update_asset(
     address: &String,
     chain: &Chain,
@@ -136,7 +193,7 @@ pub async fn update_asset(
         symbol: ActiveValue::set(symbol.to_string()),
         price: ActiveValue::set(price),
     };
-    write_asset(&conn, asset).await.unwrap();
+    write_asset(&conn, address.to_owned(), asset).await.unwrap();
 
     let asset = AssetWithPrice {
         address: address.to_string(),
@@ -272,7 +329,7 @@ async fn dexscreener(address: &String) -> Result<f64> {
 
     for prices in pairs {
         if prices.baseToken.address.to_lowercase() == address.to_string().to_lowercase() {
-            let price = prices.priceUsd.unwrap().parse::<f64>()?;
+            let price = prices.priceUsd.unwrap_or_default().parse::<f64>()?;
             return Ok(price);
         }
     }
@@ -409,8 +466,11 @@ pub async fn check_option_ve_discount(
 ///
 /// Write asset to DB.
 ///
-#[instrument(skip(conn))]
-async fn write_asset(conn: &Arc<DatabaseConnection>, asset: ActiveAsset) -> Result<(), StatusCode> {
+async fn write_asset(
+    conn: &Arc<DatabaseConnection>,
+    asset_address: String,
+    asset: ActiveAsset,
+) -> Result<(), StatusCode> {
     match Assets::insert(asset)
         .on_conflict(
             sea_query::OnConflict::columns([AssetColumn::Address, AssetColumn::ChainId])
@@ -423,10 +483,10 @@ async fn write_asset(conn: &Arc<DatabaseConnection>, asset: ActiveAsset) -> Resu
     {
         Ok(_) => {}
         Err(e) => {
-            error!("Error writing to DB: {:?}", e);
+            error!("Error writing asset {} to DB: {:?}", asset_address, e);
             return Err(e);
         }
     }
-    info!("DB write successful");
+    info!("Asset {} DB write successful", asset_address);
     Ok(())
 }

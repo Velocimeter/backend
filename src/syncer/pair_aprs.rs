@@ -10,7 +10,7 @@ use sea_orm::{
     sea_query, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter,
 };
 use std::sync::Arc;
-use tracing::{error, info, instrument};
+use tracing::{error, info};
 
 use crate::syncer::assets::{check_if_token_is_option, check_option_ve_discount, find_asset};
 use crate::{server::internal_error, syncer::types::Chain};
@@ -261,7 +261,6 @@ async fn clean_up_stale_rewards(
     Ok(())
 }
 
-#[instrument(skip(conn))]
 async fn write_apr(conn: &Arc<DatabaseConnection>, apr: ActiveAprsModel) -> Result<(), StatusCode> {
     match Aprs::insert(apr)
         .on_conflict(
@@ -279,10 +278,10 @@ async fn write_apr(conn: &Arc<DatabaseConnection>, apr: ActiveAprsModel) -> Resu
     {
         Ok(_) => {}
         Err(e) => {
-            error!("Error writing to DB: {:?}", e);
+            error!("Error writing aprs to DB: {:?}", e);
             return Err(e);
         }
     }
-    info!("DB write successful");
+    info!("Aprs DB write successful");
     Ok(())
 }

@@ -1,8 +1,11 @@
 use futures::future::join_all;
 use sea_orm::{Database, DatabaseConnection};
-use std::env;
 use std::sync::Arc;
-use tokio::time::{sleep, Duration};
+use std::{env, time::Instant};
+use tokio::{
+    task::JoinHandle,
+    time::{sleep, Duration},
+};
 use tracing::{info, instrument};
 
 mod assets;
@@ -13,7 +16,7 @@ mod pair_aprs;
 mod pairs;
 mod types;
 
-use assets::update_assets_from_tokenlist;
+use assets::{update_assets_from_tokenlist, update_other_db_assets_prices};
 use pairs::update_pairs;
 use types::Chain;
 
@@ -62,15 +65,20 @@ pub async fn syncer() {
 }
 
 async fn iteration_run(chains: Vec<Chain>, conn: Arc<DatabaseConnection>) {
-    let mut tasks = vec![];
-    for chain in chains {
-        let pool = Arc::clone(&conn);
-        let task = tokio::spawn(async move {
-            update_assets_from_tokenlist(&chain, &pool).await.unwrap();
-            update_pairs(&chain, &pool).await.unwrap();
-            update_killed_gauges(chain, pool).await.unwrap();
-        });
-        tasks.push(task);
-    }
+    let now = Instant::now();
+    let tasks: Vec<JoinHandle<()>> = chains
+        .into_iter()
+        .map(|chain| {
+            let pool = Arc::clone(&conn);
+            let task = tokio::spawn(async move {
+                update_assets_from_tokenlist(&chain, &pool).await.unwrap();
+                update_other_db_assets_prices(&chain, &pool).await.unwrap();
+                update_pairs(&chain, &pool).await.unwrap();
+                update_killed_gauges(chain, pool).await.unwrap();
+            });
+            task
+        })
+        .collect();
     join_all(tasks).await;
+    info!("Iteration took {} seconds", now.elapsed().as_secs());
 }
