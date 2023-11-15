@@ -363,9 +363,11 @@ async fn dexscreener(address: &String, chain_name: &String) -> Result<f64> {
                     .as_ref()
                     .is_some_and(|liq| liq.usd.is_some_and(|liq_usd| liq_usd > 1000.0))
                 && pair.chainId.to_lowercase() == chain_name.to_lowercase()
-                // no multichain usdc
+                // no multichain usdc/dai
                 && pair.quoteToken.address.to_lowercase()
                     != "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75".to_lowercase()
+                && pair.quoteToken.address.to_lowercase()
+                    != "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E".to_lowercase()
         })
         .collect();
 
