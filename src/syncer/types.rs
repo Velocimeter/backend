@@ -214,7 +214,7 @@ pub struct DexscreenerPriceChange {
 #[derive(Debug, Deserialize, Serialize)]
 
 pub struct DexscreenerLiquidity {
-    pub usd: Option<i32>,
-    pub base: i32,
-    pub quote: i32,
+    pub usd: Option<f64>,
+    pub base: f64,
+    pub quote: f64,
 }
