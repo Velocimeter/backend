@@ -19,7 +19,9 @@ use tracing::{error, info, instrument};
 
 use crate::server::internal_error;
 use crate::syncer::types::AssetWithPrice;
-use crate::syncer::types::{Asset, Chain, DexscreenerResponse, GeckoTerminalResponse};
+use crate::syncer::types::{
+    Asset, Chain, DexscreenerPair, DexscreenerResponse, GeckoTerminalResponse,
+};
 
 ///
 /// Return asset from DB if exists, otherwise update asset, save to DB and return.
@@ -294,8 +296,9 @@ async fn get_asset_price(
 /// Get aggregated price in stablecoins from geckoterminal or dexscreener.
 ///
 async fn get_aggregated_price_in_stables(address: &String, chain: Chain) -> Result<f64> {
-    let chain_name = &chain.get_chain_data().geckoterminal_name;
-    let price = geckoterminal(address, chain_name).await;
+    let geckoterminal_name = &chain.get_chain_data().geckoterminal_name;
+    let chain_name = &chain.get_chain_data().name;
+    let price = geckoterminal(address, geckoterminal_name).await;
     match price {
         Ok(price) => {
             if price > 0.0 {
@@ -304,7 +307,7 @@ async fn get_aggregated_price_in_stables(address: &String, chain: Chain) -> Resu
         }
         Err(_) => {}
     }
-    let price = dexscreener(address).await;
+    let price = dexscreener(address, chain_name).await;
     match price {
         Ok(price) => return Ok(price),
         Err(_) => {}
@@ -335,7 +338,7 @@ async fn geckoterminal(address: &String, chain_name: &String) -> Result<f64> {
 ///
 /// Get price from dexscreener.
 ///
-async fn dexscreener(address: &String) -> Result<f64> {
+async fn dexscreener(address: &String, chain_name: &String) -> Result<f64> {
     let url = format!("https://api.dexscreener.com/latest/dex/tokens/{}", address);
     let http_client = reqwest::Client::builder().build()?;
     let res = http_client.get(url).send().await?;
@@ -351,18 +354,24 @@ async fn dexscreener(address: &String) -> Result<f64> {
         b.cmp(&a)
     });
 
-    for prices in pairs {
-        if prices.baseToken.address.to_lowercase() == address.to_string().to_lowercase()
-            && prices
-                .liquidity
-                .is_some_and(|liq| liq.usd.is_some_and(|liq_usd| liq_usd > 1000.0))
-            // Fantom USDC price is not correct (Multichain collapse)
-            && prices.quoteToken.address.to_lowercase()
-                != "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75".to_lowercase()
-        {
-            let price = prices.priceUsd.unwrap_or_default().parse::<f64>()?;
-            return Ok(price);
-        }
+    let filtered_pairs: Vec<DexscreenerPair> = pairs
+        .into_iter()
+        .filter(|pair| {
+            pair.baseToken.address.to_lowercase() == address.to_string().to_lowercase()
+                && pair
+                    .liquidity
+                    .as_ref()
+                    .is_some_and(|liq| liq.usd.is_some_and(|liq_usd| liq_usd > 1000.0))
+                && pair.chainId.to_lowercase() == chain_name.to_lowercase()
+                // no multichain usdc
+                && pair.quoteToken.address.to_lowercase()
+                    != "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75".to_lowercase()
+        })
+        .collect();
+
+    if let Some(pair) = filtered_pairs.first() {
+        let price = pair.priceUsd.clone().unwrap_or_default().parse::<f64>()?;
+        return Ok(price);
     }
 
     Ok(0.0)

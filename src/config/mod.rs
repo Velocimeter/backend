@@ -9,7 +9,7 @@ pub const FANTOM_TOKENLISTS: &str =
     "https://raw.githubusercontent.com/Velocimeter/docs/main/tokenlists/fantom.json";
 pub const FANTOM_DEFAULT_TOKEN: &str = "0x07BB65fAaC502d4996532F834A1B7ba5dC32Ff96";
 pub const FANTOM_O_TOKEN: &str = "0xF9EDdca6B1e548B0EC8cDDEc131464F462b8310D";
-pub const FANTOM_STABLECOIN: &str = "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E";
+pub const FANTOM_STABLECOIN: &str = "0x1b6382dbdea11d97f24495c9a90b7c88469134a4";
 pub const FANTOM_ROUTE_TOKEN: &str = "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83";
 
 pub const BASE_GAUGE: &str = "0x3f5129112754d4fbe7ab228c2d5e312b2bc79a06";
