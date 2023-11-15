@@ -1,4 +1,5 @@
 use backend::config::*;
+use ethers::types::Address;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
@@ -19,6 +20,7 @@ pub struct ChainData {
     pub o_token_address: String,
     pub stablecoin_address: String,
     pub route_token_address: String,
+    pub wblt_address: String,
     pub multicall_address: String,
 }
 
@@ -48,6 +50,7 @@ impl Chain {
                 o_token_address: FANTOM_O_TOKEN.to_string(),
                 stablecoin_address: FANTOM_STABLECOIN.to_string(),
                 route_token_address: FANTOM_ROUTE_TOKEN.to_string(),
+                wblt_address: format!("{:?}", Address::zero()),
                 native_gauge_address: FANTOM_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
             }),
@@ -67,6 +70,7 @@ impl Chain {
                 o_token_address: BASE_O_TOKEN.to_string(),
                 stablecoin_address: BASE_STABLECOIN.to_string(),
                 route_token_address: BASE_ROUTE_TOKEN.to_string(),
+                wblt_address: BASE_WBLT.to_string(),
                 native_gauge_address: BASE_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
             }),
@@ -86,6 +90,7 @@ impl Chain {
                 o_token_address: CANTO_O_TOKEN.to_string(),
                 stablecoin_address: CANTO_STABLECOIN.to_string(),
                 route_token_address: CANTO_ROUTE_TOKEN.to_string(),
+                wblt_address: format!("{:?}", Address::zero()),
                 native_gauge_address: CANTO_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
             }),
@@ -125,14 +130,31 @@ pub struct AssetWithPrice {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct GeckoTerminalResponse {
+pub enum GeckoTerminalResponse {
+    Success(GeckoTerminalSuccessResponse),
+    Error(GeckoTerminalFailedResponse),
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GeckoTerminalSuccessResponse {
     pub data: GeckoTerminalData,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GeckoTerminalFailedResponse {
+    pub errors: Vec<GeckoterminalError>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GeckoTerminalData {
     id: String,
     pub attributes: GeckoTerminalAttributes,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GeckoterminalError {
+    pub status: String,
+    pub title: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

@@ -4,7 +4,8 @@ use backend::bindings::{oTOKEN, Router, ERC20};
 use backend::database::assets::{
     ActiveModel as ActiveAsset, Column as AssetColumn, Column as AssetsColumn, Entity as Assets,
 };
-use ethers::types::H160;
+use ethers::contract::abigen;
+use ethers::types::{H160, U256};
 use ethers::utils::{format_units, parse_units, to_checksum};
 use ethers::{
     abi::Address,
@@ -219,6 +220,17 @@ async fn update_asset_price(
     client: Arc<Provider<Http>>,
     conn: &Arc<DatabaseConnection>,
 ) -> Result<f64> {
+    // wBLT integration price check
+    if chain.get_chain_data().id == 8453
+        && chain.get_chain_data().wblt_address.to_lowercase() == address.to_lowercase()
+    {
+        let price = get_wblt_price(Arc::clone(&client)).await;
+        match price {
+            Ok(price) => return Ok(price),
+            Err(_) => {}
+        }
+    }
+
     let (is_option, underlying_address) =
         check_if_token_is_option(address, Arc::clone(&client)).await?;
     if is_option {
@@ -264,9 +276,16 @@ async fn get_asset_price(
         return Ok(aggregated_in_eth);
     }
     let aggregated_in_stablecoin =
-        get_aggregated_price_in_stablecoin(address, decimals, chain, client).await?;
+        get_aggregated_price_in_stablecoin(address, decimals, chain, Arc::clone(&client)).await?;
     if aggregated_in_stablecoin > 0.0 {
         return Ok(aggregated_in_stablecoin);
+    }
+    if chain.get_chain_data().id == 8453 {
+        let price =
+            get_aggregated_price_in_wblt(address, decimals, chain.clone(), client, conn).await?;
+        if price > 0.0 {
+            return Ok(price);
+        }
     }
     Ok(0.0)
 }
@@ -304,8 +323,13 @@ async fn geckoterminal(address: &String, chain_name: &String) -> Result<f64> {
     let http_client = reqwest::Client::builder().build()?;
     let res: reqwest::Response = http_client.get(url).send().await?;
     let res = res.json::<GeckoTerminalResponse>().await?;
-    let price = res.data.attributes.price_usd.parse::<f64>()?;
-    Ok(price)
+    match res {
+        GeckoTerminalResponse::Success(res) => {
+            let price = res.data.attributes.price_usd.parse::<f64>()?;
+            return Ok(price);
+        }
+        GeckoTerminalResponse::Error(_) => return Ok(0.0),
+    };
 }
 
 ///
@@ -328,7 +352,11 @@ async fn dexscreener(address: &String) -> Result<f64> {
     });
 
     for prices in pairs {
-        if prices.baseToken.address.to_lowercase() == address.to_string().to_lowercase() {
+        if prices.baseToken.address.to_lowercase() == address.to_string().to_lowercase()
+            && prices
+                .liquidity
+                .is_some_and(|liq| liq.usd.is_some_and(|liq_usd| liq_usd > 1000.0))
+        {
             let price = prices.priceUsd.unwrap_or_default().parse::<f64>()?;
             return Ok(price);
         }
@@ -411,6 +439,46 @@ async fn get_aggregated_price_in_stablecoin(
 }
 
 ///
+/// Get price using wBLT price using Router contract. Returns zero if Contract Logic error.
+/// Part of wBLT integration.
+///
+async fn get_aggregated_price_in_wblt(
+    address: &String,
+    decimals: i32,
+    chain: Chain,
+    client: Arc<Provider<Http>>,
+    conn: &Arc<DatabaseConnection>,
+) -> Result<f64> {
+    let wblt_token_address = &chain.get_chain_data().wblt_address;
+    let wblt_token_parsed_address = wblt_token_address.parse::<Address>()?;
+    let wblt_token = find_asset(wblt_token_address.to_string(), &chain, conn).await?;
+
+    let wblt_token_price = wblt_token.price;
+
+    let router_address = &chain.get_chain_data().router_address;
+    let router_address = router_address.parse::<Address>()?;
+
+    let token_address = address.parse::<Address>()?;
+
+    let router = Router::new(router_address, client);
+    let amount_in = parse_units(1, decimals)?;
+    let amount_out = router
+        .get_amount_out(amount_in.into(), token_address, wblt_token_parsed_address)
+        .call()
+        .await;
+
+    match amount_out {
+        Ok(amount_out) => {
+            let (amount_out, _is_stable) = amount_out;
+            let amount_out = format_units(amount_out, 18)?.parse::<f64>()?;
+            let price = amount_out * wblt_token_price;
+            Ok(price)
+        }
+        Err(_) => Ok(0.0),
+    }
+}
+
+///
 /// Check if token is an option. If it is, returns underlying address. Otherwise returns zero address.
 ///
 pub async fn check_if_token_is_option(
@@ -461,6 +529,26 @@ pub async fn check_option_ve_discount(
     let discount = o_token.ve_discount().call().await?;
 
     Ok(discount.as_u64() as f64)
+}
+
+abigen!(
+    WbltPriceFeed,
+    r#"[
+        getLivePrice() public view returns (uint256)
+    ]"#,
+);
+
+///
+/// Get wBLT price using wBLT price feed contract. Returns zero if Contract Logic error.
+///
+pub async fn get_wblt_price(client: Arc<Provider<Http>>) -> Result<f64> {
+    let price_feed_address = "0x03dCf91e8e5e07B563d1f2E115B2377f71fE50Aa"
+        .parse::<Address>()
+        .expect("Address is set by hand");
+    let price_feed = WbltPriceFeed::new(price_feed_address, client.clone());
+    let price: U256 = price_feed.get_live_price().call().await?;
+    let price = format_units(price, 18)?.parse::<f64>()?;
+    Ok(price)
 }
 
 ///
