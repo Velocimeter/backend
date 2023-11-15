@@ -269,16 +269,16 @@ async fn get_asset_price(
     if aggregated_in_stables > 0.0 {
         return Ok(aggregated_in_stables);
     }
+    let aggregated_in_stablecoin =
+        get_aggregated_price_in_stablecoin(address, decimals, chain, Arc::clone(&client)).await?;
+    if aggregated_in_stablecoin > 0.0 {
+        return Ok(aggregated_in_stablecoin);
+    }
     let aggregated_in_eth =
         get_aggregated_price_in_eth(address, decimals, chain.clone(), Arc::clone(&client), conn)
             .await?;
     if aggregated_in_eth > 0.0 {
         return Ok(aggregated_in_eth);
-    }
-    let aggregated_in_stablecoin =
-        get_aggregated_price_in_stablecoin(address, decimals, chain, Arc::clone(&client)).await?;
-    if aggregated_in_stablecoin > 0.0 {
-        return Ok(aggregated_in_stablecoin);
     }
     if chain.get_chain_data().id == 8453 {
         let price =
@@ -356,6 +356,9 @@ async fn dexscreener(address: &String) -> Result<f64> {
             && prices
                 .liquidity
                 .is_some_and(|liq| liq.usd.is_some_and(|liq_usd| liq_usd > 1000.0))
+            // Fantom USDC price is not correct (Multichain collapse)
+            && prices.quoteToken.address.to_lowercase()
+                != "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75".to_lowercase()
         {
             let price = prices.priceUsd.unwrap_or_default().parse::<f64>()?;
             return Ok(price);
