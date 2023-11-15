@@ -205,6 +205,8 @@ async fn write_pair(conn: &Arc<DatabaseConnection>, pair: ActivePair) -> Result<
                     PairsColumn::Reserve1,
                     PairsColumn::TotalSupply,
                     PairsColumn::Tvl,
+                    PairsColumn::Token0,
+                    PairsColumn::Token1,
                 ])
                 .to_owned(),
         )
