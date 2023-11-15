@@ -243,7 +243,7 @@ async fn clean_up_stale_rewards(
         .collect::<Vec<String>>();
 
     for apr in aprs {
-        if !reward_tokens.contains(&apr.token_address) {
+        if !reward_tokens.contains(&apr.token_address.to_lowercase()) {
             let p_a = apr.pair_address.clone();
             let t_s = apr.symbol.clone();
             let delete_result = apr.delete(conn.as_ref()).await;

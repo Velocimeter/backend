@@ -139,11 +139,11 @@ async fn clean_up_stale_bribes(
 
     let bribe_tokens = bribe_tokens
         .into_iter()
-        .map(|t_a| to_checksum(&t_a, None))
+        .map(|t_a| to_checksum(&t_a, None).to_lowercase())
         .collect::<Vec<String>>();
 
     for bribe in bribes {
-        if !bribe_tokens.contains(&bribe.token_address) {
+        if !bribe_tokens.contains(&bribe.token_address.to_lowercase()) {
             let b_a = bribe.bribe_address.clone();
             let t_a = bribe.token_address.clone();
             let delete_result = bribe.delete(conn.as_ref()).await;
@@ -176,7 +176,7 @@ async fn write_bribe(
                 BribesColumn::TokenAddress,
                 BribesColumn::PairAddress,
             ])
-            .update_column(BribesColumn::RewardAmount)
+            .update_columns([BribesColumn::RewardAmount, BribesColumn::Token])
             .to_owned(),
         )
         .exec(conn.as_ref())
