@@ -29,6 +29,7 @@ pub enum Chain {
     Fantom(ChainData),
     Base(ChainData),
     Canto(ChainData),
+    Mantle(ChainData),
 }
 
 impl Chain {
@@ -94,6 +95,26 @@ impl Chain {
                 native_gauge_address: CANTO_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
             }),
+            5000 => Self::Mantle(ChainData {
+                id: 5000,
+                rpc_url,
+                name: String::from("Mantle"),
+                geckoterminal_name: String::from("mantle"),
+                router_address: MANTLE_ROUTER.to_string(),
+                factory_address: MANTLE_FACTORY.to_string(),
+                voter_address: MANTLE_VOTER.to_string(),
+                ve_address: MANTLE_VE.to_string(),
+                minter_address: MANTLE_MINTER.to_string(),
+                rewards_dist_address: MANTLE_REWARDS_DIST.to_string(),
+                tokenlists_url: MANTLE_TOKENLISTS.to_string(),
+                default_token_address: MANTLE_DEFAULT_TOKEN.to_string(),
+                o_token_address: MANTLE_O_TOKEN.to_string(),
+                stablecoin_address: MANTLE_STABLECOIN.to_string(),
+                route_token_address: MANTLE_ROUTE_TOKEN.to_string(),
+                wblt_address: format!("{:?}", Address::zero()),
+                native_gauge_address: MANTLE_GAUGE.to_string(),
+                multicall_address: MULTICALL_ADDRESS.to_string(),
+            }),
             _ => panic!("Chain id not supported"),
         }
     }
@@ -102,6 +123,7 @@ impl Chain {
             Chain::Fantom(data) => data,
             Chain::Base(data) => data,
             Chain::Canto(data) => data,
+            Chain::Mantle(data) => data,
         }
     }
 }
