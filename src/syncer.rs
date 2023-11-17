@@ -40,19 +40,24 @@ pub async fn syncer() {
     let fantom_rpc_url = env::var("FANTOM_RPC_URL")
         .expect("Should be defined in .env")
         .to_string();
-    let fantom_chain: Chain = Chain::new(fantom_rpc_url, 250);
+    let fantom_chain = Chain::new(fantom_rpc_url, 250);
 
     let base_rpc_url = env::var("BASE_RPC_URL")
         .expect("Should be defined in .env")
         .to_string();
-    let base_chain: Chain = Chain::new(base_rpc_url, 8453);
+    let base_chain = Chain::new(base_rpc_url, 8453);
 
     let canto_rpc_url = env::var("CANTO_RPC_URL")
         .expect("Should be defined in .env")
         .to_string();
-    let canto_chain: Chain = Chain::new(canto_rpc_url, 7700);
+    let canto_chain = Chain::new(canto_rpc_url, 7700);
 
-    let chains = vec![fantom_chain, base_chain, canto_chain];
+    let mantle_rpc_url = env::var("MANTLE_RPC_URL")
+        .expect("Should be defined in .env")
+        .to_string();
+    let mantle_chain = Chain::new(mantle_rpc_url, 5000);
+
+    let chains = vec![fantom_chain, base_chain, canto_chain, mantle_chain];
 
     iteration_run(chains.clone(), Arc::clone(&conn)).await;
 
