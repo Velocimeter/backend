@@ -1,12 +1,12 @@
 use futures::future::join_all;
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::sync::Arc;
 use std::{env, time::Instant};
 use tokio::{
     task::JoinHandle,
     time::{sleep, Duration},
 };
-use tracing::{info, instrument};
+use tracing::{info, instrument, log::LevelFilter};
 
 mod assets;
 mod bribes;
@@ -25,13 +25,16 @@ use killed_gauges::update_killed_gauges;
 #[instrument]
 pub async fn syncer() {
     let db_url = env::var("DATABASE_URL").expect("Should be defined in .env");
+    let mut opt = ConnectOptions::new(db_url);
+    opt.sqlx_logging_level(LevelFilter::Trace);
+
     let iteration_time_secs = env::var("ITERATION_TIME_SECS")
         .expect("Should be defined in .env")
         .parse::<u64>()
         .expect("Should be a number");
 
     // set up connection
-    let conn = Database::connect(db_url)
+    let conn = Database::connect(opt)
         .await
         .expect("Could not connect to database");
 

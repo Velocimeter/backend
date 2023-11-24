@@ -315,6 +315,7 @@ async fn get_aggregated_price_in_stables(address: &String, chain: Chain) -> Resu
 
     Ok(0.0)
 }
+
 ///
 /// Get price from geckoterminal.
 ///
@@ -324,15 +325,23 @@ async fn geckoterminal(address: &String, chain_name: &String) -> Result<f64> {
         chain_name, address
     );
     let http_client = reqwest::Client::builder().build()?;
-    let res: reqwest::Response = http_client.get(url).send().await?;
-    let res = res.json::<GeckoTerminalResponse>().await?;
-    match res {
-        GeckoTerminalResponse::Success(res) => {
-            let price = res.data.attributes.price_usd.parse::<f64>()?;
-            return Ok(price);
+    let res = http_client.get(&url).send().await?;
+    if let Ok(res_json) = res.json::<GeckoTerminalResponse>().await {
+        match res_json {
+            GeckoTerminalResponse::Success(res) => {
+                let price = res
+                    .data
+                    .attributes
+                    .price_usd
+                    .unwrap_or_default()
+                    .parse::<f64>()?;
+                return Ok(price);
+            }
+            GeckoTerminalResponse::Error(_) => return Ok(0.0),
+            GeckoTerminalResponse::RateLimited(_) => return Ok(0.0),
         }
-        GeckoTerminalResponse::Error(_) => return Ok(0.0),
-    };
+    }
+    Ok(0.0)
 }
 
 ///

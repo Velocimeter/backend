@@ -152,9 +152,11 @@ pub struct AssetWithPrice {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum GeckoTerminalResponse {
     Success(GeckoTerminalSuccessResponse),
     Error(GeckoTerminalFailedResponse),
+    RateLimited(GeckoTermninalRateLimited),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -165,6 +167,13 @@ pub struct GeckoTerminalSuccessResponse {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GeckoTerminalFailedResponse {
     pub errors: Vec<GeckoterminalError>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GeckoTermninalRateLimited {
+    pub status: String,
+    pub title: String,
+    pub limit: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -186,9 +195,9 @@ pub struct GeckoTerminalAttributes {
     symbol: String,
     decimals: i32,
     total_supply: String,
-    coingecko_coin_id: String,
-    pub price_usd: String,
-    fdv_usd: String,
+    coingecko_coin_id: Option<String>,
+    pub price_usd: Option<String>,
+    fdv_usd: Option<String>,
     total_reserve_in_usd: String,
     volume_usd: serde_json::Value,
     market_cap_usd: Option<String>,
