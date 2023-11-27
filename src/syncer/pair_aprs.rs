@@ -61,20 +61,19 @@ pub async fn update_pair_aprs(
         let formatted_reward_token_addy = to_checksum(&reward_token_addy, None);
 
         // this the actual token that is being emitted when claim happens
-        let reward_token;
-        if is_option_emissions
+        let reward_token = if is_option_emissions
             && formatted_reward_token_addy.to_lowercase()
                 == chain.get_chain_data().default_token_address.to_lowercase()
         {
-            reward_token = find_asset(
+            find_asset(
                 chain.get_chain_data().o_token_address.to_string(),
                 chain,
                 conn,
             )
-            .await?;
+            .await?
         } else {
-            reward_token = find_asset(formatted_reward_token_addy.to_owned(), chain, conn).await?;
-        }
+            find_asset(formatted_reward_token_addy.to_owned(), chain, conn).await?
+        };
 
         multicall.add_call(gauge.reward_rate(reward_token_addy), false);
         multicall.add_call(gauge.left(reward_token_addy), false);
@@ -83,13 +82,12 @@ pub async fn update_pair_aprs(
         let (reward_rate, left, is_alive) = multicall.call::<(U256, U256, bool)>().await?;
         multicall.clear_calls();
 
-        let reward: f64;
-        if is_alive && left > U256::zero() {
+        let reward: f64 = if is_alive && left > U256::zero() {
             // 86400 seconds in a day
-            reward = format_units(reward_rate, reward_token.decimals)?.parse::<f64>()? * 86400.0;
+            format_units(reward_rate, reward_token.decimals)?.parse::<f64>()? * 86400.0
         } else {
-            reward = 0.0;
-        }
+            0.0
+        };
 
         let (is_option, underlying_token) =
             check_if_token_is_option(&reward_token.address, Arc::clone(&client)).await?;
@@ -153,12 +151,11 @@ pub async fn update_pair_aprs(
                 continue;
             }
         } else {
-            let apr: f64;
-            if tvl == 0.0 {
-                apr = 0.0;
+            let apr: f64 = if tvl == 0.0 {
+                0.0
             } else {
-                apr = reward * reward_token.price / tvl * 100.0 * 365.0;
-            }
+                reward * reward_token.price / tvl * 100.0 * 365.0
+            };
 
             let apr = ActiveAprsModel {
                 apr: ActiveValue::set(Some(apr)),
@@ -233,7 +230,7 @@ async fn clean_up_stale_rewards(
         .all(conn.as_ref())
         .await?;
 
-    if aprs.len() == 0 {
+    if aprs.is_empty() {
         return Ok(());
     }
 

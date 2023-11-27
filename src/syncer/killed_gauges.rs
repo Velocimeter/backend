@@ -50,9 +50,7 @@ pub async fn update_killed_gauges(chain: Chain, conn: Arc<DatabaseConnection>) -
 
     multicall.add_calls(
         false,
-        (0..dead_gauges_count.as_u64())
-            .into_iter()
-            .map(|i| voter.killed_gauges(U256::from(i))),
+        (0..dead_gauges_count.as_u64()).map(|i| voter.killed_gauges(U256::from(i))),
     );
 
     let dead_gauges_addresses = multicall.call_array::<H160>().await?;

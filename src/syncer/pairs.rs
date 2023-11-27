@@ -57,7 +57,7 @@ pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Resu
             &factory,
             chain.clone(),
             Arc::clone(&client),
-            &conn,
+            conn,
         )
         .await
         {
@@ -169,7 +169,7 @@ async fn update_pair(
 
     if gauge != Address::zero() {
         info!("Pair {} is a gauge", pair_address);
-        update_gauge(pair_address, gauge, tvl, &chain, Arc::clone(&client), &conn).await?;
+        update_gauge(pair_address, gauge, tvl, &chain, Arc::clone(&client), conn).await?;
     } else {
         info!("Pair {} is not a gauge", pair_address);
     }

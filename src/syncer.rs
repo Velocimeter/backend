@@ -78,13 +78,12 @@ async fn iteration_run(chains: Vec<Chain>, conn: Arc<DatabaseConnection>) {
         .into_iter()
         .map(|chain| {
             let pool = Arc::clone(&conn);
-            let task = tokio::spawn(async move {
+            tokio::spawn(async move {
                 update_assets_from_tokenlist(&chain, &pool).await.unwrap();
                 update_other_db_assets_prices(&chain, &pool).await.unwrap();
                 update_pairs(&chain, &pool).await.unwrap();
                 update_killed_gauges(chain, pool).await.unwrap();
-            });
-            task
+            })
         })
         .collect();
     join_all(tasks).await;

@@ -86,11 +86,9 @@ pub async fn update_bribe(
                 max_tbv += format_units(left, token.decimals)?.parse::<f64>()? * max_token_value;
                 min_tbv += format_units(left, token.decimals)?.parse::<f64>()? * token.price;
             }
-        } else {
-            if token.price > 0.0 {
-                max_tbv += format_units(left, token.decimals)?.parse::<f64>()? * token.price;
-                min_tbv += format_units(left, token.decimals)?.parse::<f64>()? * token.price;
-            }
+        } else if token.price > 0.0 {
+            max_tbv += format_units(left, token.decimals)?.parse::<f64>()? * token.price;
+            min_tbv += format_units(left, token.decimals)?.parse::<f64>()? * token.price;
         }
 
         let reward_amount = format_units(left, token.decimals)?.parse::<f64>()?;
@@ -133,7 +131,7 @@ async fn clean_up_stale_bribes(
         .all(conn.as_ref())
         .await?;
 
-    if bribes.len() == 0 {
+    if bribes.is_empty() {
         return Ok(());
     }
 
