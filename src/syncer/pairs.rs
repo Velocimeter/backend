@@ -211,6 +211,7 @@ async fn write_pair(
                     PairsColumn::Tvl,
                     PairsColumn::Token0,
                     PairsColumn::Token1,
+                    PairsColumn::Fee,
                 ])
                 .to_owned(),
         )
