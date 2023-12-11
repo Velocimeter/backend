@@ -1,7 +1,9 @@
 use axum::{extract::Path, http::StatusCode, response::Json, Extension};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, LoaderTrait, QueryFilter};
 
-use backend::config::{BASE_ROUTE_TOKEN, CANTO_ROUTE_TOKEN, FANTOM_ROUTE_TOKEN};
+use backend::config::{
+    BASE_ROUTE_TOKEN, CANTO_ROUTE_TOKEN, FANTOM_ROUTE_TOKEN, MANTLE_ROUTE_TOKEN,
+};
 use backend::database::aprs::Entity as Aprs;
 use backend::database::assets::{Column as AssetsColumn, Entity as Assets, Model as Asset};
 use backend::database::bribes::Entity as Bribes;
@@ -86,6 +88,7 @@ pub async fn give_routes(
         8453 => BASE_ROUTE_TOKEN,
         250 => FANTOM_ROUTE_TOKEN,
         7700 => CANTO_ROUTE_TOKEN,
+        5000 => MANTLE_ROUTE_TOKEN,
         _ => return Err(StatusCode::NOT_FOUND),
     };
     let res = Assets::find_by_id((route_token_address.to_lowercase(), chain_id))
