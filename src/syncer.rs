@@ -60,7 +60,18 @@ pub async fn syncer() {
         .to_string();
     let mantle_chain = Chain::new(mantle_rpc_url, 5000);
 
-    let chains = vec![fantom_chain, base_chain, canto_chain, mantle_chain];
+    let b_testnet_rpc_url = env::var("B_TESTNET_RPC_URL")
+        .expect("Should be defined in .env")
+        .to_string();
+    let b_testnet_chain = Chain::new(b_testnet_rpc_url, 2061);
+
+    let chains = vec![
+        fantom_chain,
+        base_chain,
+        canto_chain,
+        mantle_chain,
+        b_testnet_chain,
+    ];
 
     iteration_run(chains.clone(), Arc::clone(&conn)).await;
 

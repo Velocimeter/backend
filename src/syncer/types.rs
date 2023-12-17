@@ -30,6 +30,7 @@ pub enum Chain {
     Base(ChainData),
     Canto(ChainData),
     Mantle(ChainData),
+    BTestnet(ChainData),
 }
 
 impl Chain {
@@ -115,6 +116,26 @@ impl Chain {
                 native_gauge_address: MANTLE_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
             }),
+            2061 => Self::BTestnet(ChainData {
+                id: 2061,
+                rpc_url,
+                name: String::from("BTestnet"),
+                geckoterminal_name: String::from("btestnet"),
+                router_address: B_TESTNET_ROUTER.to_string(),
+                factory_address: B_TESTNET_FACTORY.to_string(),
+                voter_address: B_TESTNET_VOTER.to_string(),
+                ve_address: B_TESTNET_VE.to_string(),
+                minter_address: B_TESTNET_MINTER.to_string(),
+                rewards_dist_address: B_TESTNET_REWARDS_DIST.to_string(),
+                tokenlists_url: B_TESTNET_TOKENLISTS.to_string(),
+                default_token_address: B_TESTNET_DEFAULT_TOKEN.to_string(),
+                o_token_address: B_TESTNET_O_TOKEN.to_string(),
+                stablecoin_address: B_TESTNET_STABLECOIN.to_string(),
+                route_token_address: B_TESTNET_ROUTE_TOKEN.to_string(),
+                wblt_address: format!("{:?}", Address::zero()),
+                native_gauge_address: B_TESTNET_GAUGE.to_string(),
+                multicall_address: B_TESTNET_MULTICALL_ADDRESS.to_string(),
+            }),
             _ => panic!("Chain id not supported"),
         }
     }
@@ -124,6 +145,7 @@ impl Chain {
             Chain::Base(data) => data,
             Chain::Canto(data) => data,
             Chain::Mantle(data) => data,
+            Chain::BTestnet(data) => data,
         }
     }
 }
