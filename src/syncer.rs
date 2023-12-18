@@ -11,12 +11,14 @@ use tracing::{info, instrument, log::LevelFilter};
 mod assets;
 mod bribes;
 mod gauges;
+mod graphene_pairs;
 mod killed_gauges;
 mod pair_aprs;
 mod pairs;
 mod types;
 
 use assets::{update_assets_from_tokenlist, update_other_db_assets_prices};
+use graphene_pairs::update_graphene_pairs;
 use pairs::update_pairs;
 use types::Chain;
 
@@ -82,6 +84,7 @@ async fn iteration_run(chains: Vec<Chain>, conn: Arc<DatabaseConnection>) {
                 update_assets_from_tokenlist(&chain, &pool).await.unwrap();
                 update_other_db_assets_prices(&chain, &pool).await.unwrap();
                 update_pairs(&chain, &pool).await.unwrap();
+                update_graphene_pairs(&chain, &pool).await.unwrap();
                 update_killed_gauges(chain, pool).await.unwrap();
             })
         })

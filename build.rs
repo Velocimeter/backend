@@ -20,6 +20,11 @@ fn main() {
     rust_file_generation("Pair", "./abi/Pair.json", "./src/bindings/pair.rs");
     rust_file_generation("Minter", "./abi/Minter.json", "./src/bindings/minter.rs");
     rust_file_generation("Bribe", "./abi/Bribe.json", "./src/bindings/bribe.rs");
+    rust_file_generation(
+        "CarbonPair",
+        "./abi/CarbonPair.json",
+        "./src/bindings/carbon_pair.rs",
+    );
 }
 
 fn rust_file_generation(name: &str, abi_source: &str, path: &str) {

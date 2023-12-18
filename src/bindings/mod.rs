@@ -30,3 +30,6 @@ pub use minter::Minter;
 
 mod bribe;
 pub use bribe::Bribe;
+
+mod carbon_pair;
+pub use carbon_pair::CarbonPair;
