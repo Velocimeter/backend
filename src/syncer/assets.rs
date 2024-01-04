@@ -264,12 +264,24 @@ async fn get_asset_price(
     client: Arc<Provider<Http>>,
     conn: &Arc<DatabaseConnection>,
 ) -> Result<f64> {
+    let stablecoin_address = &chain.get_chain_data().stablecoin_address;
+
+    if address.to_lowercase() == stablecoin_address.to_lowercase() {
+        return Ok(1.0);
+    }
+
     let aggregated_in_stables = get_aggregated_price_in_stables(address, chain.clone()).await?;
     if aggregated_in_stables > 0.0 {
         return Ok(aggregated_in_stables);
     }
-    let aggregated_in_stablecoin =
-        get_aggregated_price_in_stablecoin(address, decimals, chain, Arc::clone(&client)).await?;
+    let aggregated_in_stablecoin = get_aggregated_price_in_stablecoin(
+        address,
+        decimals,
+        stablecoin_address,
+        chain,
+        Arc::clone(&client),
+    )
+    .await?;
     if aggregated_in_stablecoin > 0.0 {
         return Ok(aggregated_in_stablecoin);
     }
@@ -279,11 +291,50 @@ async fn get_asset_price(
     if aggregated_in_eth > 0.0 {
         return Ok(aggregated_in_eth);
     }
+    // Base special case
     if chain.get_chain_data().id == 8453 {
-        let price =
-            get_aggregated_price_in_wblt(address, decimals, chain.clone(), client, conn).await?;
+        let price = get_aggregated_price_in_wblt(
+            address,
+            decimals,
+            chain.clone(),
+            Arc::clone(&client),
+            conn,
+        )
+        .await?;
         if price > 0.0 {
             return Ok(price);
+        }
+    }
+    // Mantle special case
+    if chain.get_chain_data().id == 5000 {
+        const FRAX_ADDRESS: &str = "0x406cde76a3fd20e48bc1e0f60651e60ae204b040";
+        const SFRAX_ADDRESS: &str = "0xf3602c5a7f625181659445c8dddde73da15c22e3";
+        // FRAX
+        if address.to_lowercase() == FRAX_ADDRESS.to_lowercase() {
+            return Ok(1.0);
+        }
+        // sFRAX
+        if address.to_lowercase() == SFRAX_ADDRESS.to_lowercase() {
+            return Ok(1.0);
+        }
+        // if paired with FRAX
+        let aggregated_in_stablecoin = get_aggregated_price_in_stablecoin(
+            address,
+            decimals,
+            FRAX_ADDRESS,
+            chain,
+            Arc::clone(&client),
+        )
+        .await?;
+        if aggregated_in_stablecoin > 0.0 {
+            return Ok(aggregated_in_stablecoin);
+        }
+        // if pairs with sFRAX
+        let aggregated_in_stablecoin =
+            get_aggregated_price_in_stablecoin(address, decimals, SFRAX_ADDRESS, chain, client)
+                .await?;
+        if aggregated_in_stablecoin > 0.0 {
+            return Ok(aggregated_in_stablecoin);
         }
     }
     Ok(0.0)
@@ -428,11 +479,24 @@ async fn get_aggregated_price_in_eth(
 async fn get_aggregated_price_in_stablecoin(
     address: &str,
     decimals: i32,
+    stablecoin_address: &str,
     chain: &Chain,
     client: Arc<Provider<Http>>,
 ) -> Result<f64> {
-    let stablecoin_address = &chain.get_chain_data().stablecoin_address;
     let stablecoin_address = stablecoin_address.parse::<Address>()?;
+    let stablecoin_decimals_call = ERC20::new(stablecoin_address, Arc::clone(&client)).decimals();
+
+    let mut multicall = Multicall::<Provider<Http>>::new(
+        client.clone(),
+        Some(
+            chain
+                .get_chain_data()
+                .multicall_address
+                .parse::<Address>()
+                .expect("Address is set by hand"),
+        ),
+    )
+    .await?;
 
     let router_address = &chain.get_chain_data().router_address;
     let router_address = router_address.parse::<Address>()?;
@@ -441,15 +505,19 @@ async fn get_aggregated_price_in_stablecoin(
 
     let router = Router::new(router_address, client);
     let amount_in = parse_units(1, decimals)?;
-    let amount_out = router
-        .get_amount_out(amount_in.into(), token_address, stablecoin_address)
-        .call()
-        .await;
+    let amount_out_call =
+        router.get_amount_out(amount_in.into(), token_address, stablecoin_address);
 
-    match amount_out {
-        Ok(amount_out) => {
+    multicall.add_call(amount_out_call, false);
+    multicall.add_call(stablecoin_decimals_call, false);
+
+    let multicall_result = multicall.call::<((U256, bool), u8)>().await;
+
+    match multicall_result {
+        Ok((amount_out, stablecoin_decimals)) => {
             let (amount_out, _is_stable) = amount_out;
-            let amount_out = format_units(amount_out, 6)?.parse::<f64>()?;
+            let decimals: usize = stablecoin_decimals.into();
+            let amount_out = format_units(amount_out, decimals)?.parse::<f64>()?;
             Ok(amount_out)
         }
         Err(_) => Ok(0.0),
