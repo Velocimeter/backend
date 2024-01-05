@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use ethers::{
     abi::Address,
-    contract::{ContractCall, Multicall},
+    contract::{abigen, ContractCall, Multicall},
     prelude::{Http, Provider},
     types::{H160, U256},
     utils::{format_ether, format_units, to_checksum},
@@ -12,7 +12,7 @@ use serde_json::json;
 use std::sync::Arc;
 use tracing::{error, info, instrument};
 
-use backend::bindings::{Factory, Pair, Voter};
+use backend::bindings::{CarbonPair, Factory, Voter};
 use backend::database::pairs::{ActiveModel as ActivePair, Column as PairsColumn, Entity as Pairs};
 
 use crate::server::internal_error;
@@ -23,17 +23,31 @@ use crate::syncer::{
 };
 
 #[instrument(skip_all)]
-pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Result<()> {
+pub async fn update_graphene_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Result<()> {
     info!(
-        "Collecting pairs for chain id: {}",
+        "Collecting graphene pairs for chain id: {}",
         chain.get_chain_data().id
     );
     let provider = Provider::<Http>::try_from(chain.get_chain_data().rpc_url.to_string())?;
     let client = Arc::new(provider);
 
-    let factory_address = chain.get_chain_data().factory_address.parse::<Address>()?;
+    let factory_address = chain
+        .get_chain_data()
+        .graphene_factory_address
+        .parse::<Address>()?;
+
+    if factory_address == Address::zero() {
+        info!(
+            "Graphene factory doesn't exist for chain id: {}",
+            chain.get_chain_data().id
+        );
+        return Ok(());
+    }
+
     let factory = Factory::new(factory_address, Arc::clone(&client));
-    let all_pairs = factory.all_pairs_length().call().await?;
+    // TODO: fix this with new factory
+    // let all_pairs = factory.all_pairs_length().call().await?;
+    let all_pairs = U256::from(1);
 
     let calls: Vec<ContractCall<Provider<Http>, Address>> = (0..all_pairs.as_u64())
         .map(|i| factory.all_pairs(i.into()))
@@ -56,15 +70,7 @@ pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Resu
     let pair_addresses: Vec<Address> = multicall.call_array().await?;
 
     for pair_address in pair_addresses {
-        match update_pair(
-            pair_address,
-            &factory,
-            chain.clone(),
-            Arc::clone(&client),
-            conn,
-        )
-        .await
-        {
+        match update_pair(pair_address, chain.clone(), Arc::clone(&client), conn).await {
             Ok(_) => {}
             Err(e) => {
                 info!("Error updating pair {}: {:?}", pair_address, e);
@@ -77,14 +83,20 @@ pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Resu
 
 async fn update_pair(
     pair_address: H160,
-    factory_contract: &Factory<Provider<Http>>,
     chain: Chain,
     client: Arc<Provider<Http>>,
     conn: &Arc<DatabaseConnection>,
 ) -> Result<()> {
+    abigen!(
+        CarbonController,
+        r#"[
+            pairTradingFeePPM(address, address) public view returns (uint256)
+        ]"#,
+    );
+
     let voter_address = chain.get_chain_data().voter_address.parse::<Address>()?;
     let voter = Voter::new(voter_address, Arc::clone(&client));
-    let pair = Pair::new(pair_address, Arc::clone(&client));
+    let pair = CarbonPair::new(pair_address, Arc::clone(&client));
     let mut multicall = Multicall::<Provider<Http>>::new(
         client.clone(),
         Some(
@@ -97,39 +109,35 @@ async fn update_pair(
     )
     .await?;
 
-    multicall.add_call(pair.get_reserves(), false);
+    multicall.add_calls(
+        false,
+        [
+            pair.balance_of_token_0(),
+            pair.balance_of_token_1(),
+            pair.total_supply(),
+        ],
+    );
     multicall.add_calls(
         false,
         [pair.token_0(), pair.token_1(), voter.gauges(pair_address)],
     );
-    multicall.add_calls(
-        false,
-        [pair.total_supply(), factory_contract.get_fee(pair_address)],
-    );
     multicall.add_call(pair.symbol(), false);
-    multicall.add_call(pair.stable(), false);
 
-    let (
-        (reserve0, reserve1, _timestamp),
-        token_0,
-        token_1,
-        gauge,
-        total_supply,
-        fee,
-        symbol,
-        stable,
-    ) = multicall
-        .call::<(
-            (U256, U256, U256),
-            H160,
-            H160,
-            H160,
-            U256,
-            U256,
-            String,
-            bool,
-        )>()
+    let (reserve0, reserve1, total_supply, token_0, token_1, gauge, symbol) = multicall
+        .call::<(U256, U256, U256, H160, H160, H160, String)>()
         .await?;
+
+    let fee: U256 = CarbonController::new(
+        chain
+            .get_chain_data()
+            .carbon_controller_address
+            .parse::<Address>()
+            .expect("Set by hand"),
+        Arc::clone(&client),
+    )
+    .pair_trading_fee_ppm(token_0, token_1)
+    .call()
+    .await?;
 
     let token_0 = find_asset(to_checksum(&token_0, None), &chain, conn).await?;
     let token_1 = find_asset(to_checksum(&token_1, None), &chain, conn).await?;
@@ -141,13 +149,13 @@ async fn update_pair(
         .expect("Should not happen")
         .parse::<f64>()?;
     let total_supply = format_ether(total_supply).parse::<f64>()?;
-    let fee = fee.as_u64() as f64 / 100.0;
+    let fee = fee.as_u64() as f64 / 10000.0;
     let tvl = get_tvl(reserve0, reserve1, token_0.price, token_1.price);
 
     let pair_address_checksumed = to_checksum(&pair_address, None);
 
     let pair = ActivePair {
-        pair_type: ActiveValue::Set(PairType::UniV2.as_str()),
+        pair_type: ActiveValue::Set(PairType::GrapheneCL.as_str()),
         chain_id: ActiveValue::Set(chain.get_chain_data().id),
         decimals: ActiveValue::Set(18),
         address: ActiveValue::Set(pair_address_checksumed.to_owned()),
@@ -162,7 +170,7 @@ async fn update_pair(
         reserve1: ActiveValue::Set(reserve1),
         total_supply: ActiveValue::Set(total_supply),
         tvl: ActiveValue::Set(tvl),
-        stable: ActiveValue::Set(stable),
+        stable: ActiveValue::Set(false),
     };
 
     match write_pair(conn, pair_address_checksumed, pair).await {

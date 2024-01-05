@@ -11,6 +11,7 @@ pub struct ChainData {
     pub native_gauge_address: String,
     pub router_address: String,
     pub factory_address: String,
+    pub graphene_factory_address: String,
     pub voter_address: String,
     pub minter_address: String,
     pub ve_address: String,
@@ -22,6 +23,7 @@ pub struct ChainData {
     pub route_token_address: String,
     pub wblt_address: String,
     pub multicall_address: String,
+    pub carbon_controller_address: String,
 }
 
 #[derive(Debug, Clone)]
@@ -42,6 +44,7 @@ impl Chain {
                 geckoterminal_name: String::from("ftm"),
                 router_address: FANTOM_ROUTER.to_string(),
                 factory_address: FANTOM_FACTORY.to_string(),
+                graphene_factory_address: format!("{:?}", Address::zero()),
                 voter_address: FANTOM_VOTER.to_string(),
                 ve_address: FANTOM_VE.to_string(),
                 minter_address: FANTOM_MINTER.to_string(),
@@ -54,6 +57,7 @@ impl Chain {
                 wblt_address: format!("{:?}", Address::zero()),
                 native_gauge_address: FANTOM_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
+                carbon_controller_address: FANTOM_CARBON_CONTROLLER.to_string(),
             }),
             8453 => Self::Base(ChainData {
                 id: 8453,
@@ -62,6 +66,7 @@ impl Chain {
                 geckoterminal_name: String::from("base"),
                 router_address: BASE_ROUTER.to_string(),
                 factory_address: BASE_FACTORY.to_string(),
+                graphene_factory_address: BASE_GRAPHENE_FACTORY.to_string(),
                 voter_address: BASE_VOTER.to_string(),
                 ve_address: BASE_VE.to_string(),
                 minter_address: BASE_MINTER.to_string(),
@@ -74,6 +79,7 @@ impl Chain {
                 wblt_address: BASE_WBLT.to_string(),
                 native_gauge_address: BASE_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
+                carbon_controller_address: BASE_CARBON_CONTROLLER.to_string(),
             }),
             7700 => Self::Canto(ChainData {
                 id: 7700,
@@ -82,6 +88,7 @@ impl Chain {
                 geckoterminal_name: String::from("canto"),
                 router_address: CANTO_ROUTER.to_string(),
                 factory_address: CANTO_FACTORY.to_string(),
+                graphene_factory_address: format!("{:?}", Address::zero()),
                 voter_address: CANTO_VOTER.to_string(),
                 ve_address: CANTO_VE.to_string(),
                 minter_address: CANTO_MINTER.to_string(),
@@ -94,6 +101,7 @@ impl Chain {
                 wblt_address: format!("{:?}", Address::zero()),
                 native_gauge_address: CANTO_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
+                carbon_controller_address: CANTO_CARBON_CONTROLLER.to_string(),
             }),
             5000 => Self::Mantle(ChainData {
                 id: 5000,
@@ -102,6 +110,7 @@ impl Chain {
                 geckoterminal_name: String::from("mantle"),
                 router_address: MANTLE_ROUTER.to_string(),
                 factory_address: MANTLE_FACTORY.to_string(),
+                graphene_factory_address: format!("{:?}", Address::zero()),
                 voter_address: MANTLE_VOTER.to_string(),
                 ve_address: MANTLE_VE.to_string(),
                 minter_address: MANTLE_MINTER.to_string(),
@@ -114,6 +123,7 @@ impl Chain {
                 wblt_address: format!("{:?}", Address::zero()),
                 native_gauge_address: MANTLE_GAUGE.to_string(),
                 multicall_address: MULTICALL_ADDRESS.to_string(),
+                carbon_controller_address: MANTLE_CARBON_CONTROLLER.to_string(),
             }),
             _ => panic!("Chain id not supported"),
         }
@@ -270,4 +280,18 @@ pub struct DexscreenerLiquidity {
     pub usd: Option<f64>,
     pub base: f64,
     pub quote: f64,
+}
+
+pub enum PairType {
+    UniV2,
+    GrapheneCL,
+}
+
+impl PairType {
+    pub fn as_str(&self) -> String {
+        match self {
+            PairType::UniV2 => "univ2".to_owned(),
+            PairType::GrapheneCL => "graphene_cl".to_owned(),
+        }
+    }
 }

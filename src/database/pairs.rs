@@ -11,6 +11,8 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub chain_id: i32,
     #[sea_orm(column_type = "Text")]
+    pub pair_type: String,
+    #[sea_orm(column_type = "Text")]
     pub symbol: String,
     pub decimals: i32,
     pub stable: bool,

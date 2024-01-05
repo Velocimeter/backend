@@ -15,6 +15,7 @@ pub struct PairsResponse {
 pub struct PairResponse {
     pub address: String,
     pub chain_id: i32,
+    pub pair_type: String,
     pub symbol: String,
     pub decimals: i32,
     pub stable: bool,
@@ -45,6 +46,7 @@ impl PairResponse {
         Self {
             address: pair.address,
             chain_id: pair.chain_id,
+            pair_type: pair.pair_type,
             symbol: pair.symbol,
             decimals: pair.decimals,
             stable: pair.stable,
