@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use ethers::{
     abi::Address,
-    contract::{abigen, Multicall},
+    contract::{abigen, ContractCall, Multicall},
     prelude::{Http, Provider},
     types::{H160, U256},
     utils::{format_ether, format_units, to_checksum},
@@ -12,7 +12,7 @@ use serde_json::json;
 use std::sync::Arc;
 use tracing::{error, info, instrument};
 
-use backend::bindings::{CarbonPair, Voter};
+use backend::bindings::{CarbonPair, Factory, Voter};
 use backend::database::pairs::{ActiveModel as ActivePair, Column as PairsColumn, Entity as Pairs};
 
 use crate::server::internal_error;
@@ -27,10 +27,43 @@ pub async fn update_graphene_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>
     let provider = Provider::<Http>::try_from(chain.get_chain_data().rpc_url.to_string())?;
     let client = Arc::new(provider);
 
-    let pair_addresses: Vec<Address> = vec!["0x923e7dDc57c7041D9100a03eDB553fFFbC11A302"]
-        .into_iter()
-        .map(|addy| addy.parse::<Address>().expect("Set by hand, testing"))
+    let factory_address = chain
+        .get_chain_data()
+        .graphene_factory_address
+        .parse::<Address>()?;
+
+    if factory_address == Address::zero() {
+        info!(
+            "Graphene factory doesn't exist for chain id: {}",
+            chain.get_chain_data().id
+        );
+        return Ok(());
+    }
+
+    let factory = Factory::new(factory_address, Arc::clone(&client));
+    // TODO: fix this with new factory
+    // let all_pairs = factory.all_pairs_length().call().await?;
+    let all_pairs = U256::from(1);
+
+    let calls: Vec<ContractCall<Provider<Http>, Address>> = (0..all_pairs.as_u64())
+        .map(|i| factory.all_pairs(i.into()))
         .collect();
+
+    let mut multicall = Multicall::<Provider<Http>>::new(
+        client.clone(),
+        Some(
+            chain
+                .get_chain_data()
+                .multicall_address
+                .parse::<Address>()
+                .expect("Address is set by hand"),
+        ),
+    )
+    .await?;
+
+    multicall.add_calls(false, calls);
+
+    let pair_addresses: Vec<Address> = multicall.call_array().await?;
 
     for pair_address in pair_addresses {
         match update_pair(pair_address, chain.clone(), Arc::clone(&client), conn).await {
