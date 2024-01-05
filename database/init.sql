@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS pairs (
   address TEXT NOT NULL,
   chain_id INTEGER NOT NULL,
   symbol TEXT NOT NULL,
+  pair_type TEXT NOT NULL,
   decimals INTEGER NOT NULL,
   stable BOOLEAN NOT NULL,
   fee FLOAT NOT NULL,

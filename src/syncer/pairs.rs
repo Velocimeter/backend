@@ -16,7 +16,11 @@ use backend::bindings::{Factory, Pair, Voter};
 use backend::database::pairs::{ActiveModel as ActivePair, Column as PairsColumn, Entity as Pairs};
 
 use crate::server::internal_error;
-use crate::syncer::{assets::find_asset, gauges::update_gauge, types::Chain};
+use crate::syncer::{
+    assets::find_asset,
+    gauges::update_gauge,
+    types::{Chain, PairType},
+};
 
 #[instrument(skip_all)]
 pub async fn update_pairs(chain: &Chain, conn: &Arc<DatabaseConnection>) -> Result<()> {
@@ -143,6 +147,7 @@ async fn update_pair(
     let pair_address_checksumed = to_checksum(&pair_address, None);
 
     let pair = ActivePair {
+        pair_type: ActiveValue::Set(PairType::UniV2.as_str()),
         chain_id: ActiveValue::Set(chain.get_chain_data().id),
         decimals: ActiveValue::Set(18),
         address: ActiveValue::Set(pair_address_checksumed.to_owned()),

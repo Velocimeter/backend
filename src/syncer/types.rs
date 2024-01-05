@@ -281,3 +281,17 @@ pub struct DexscreenerLiquidity {
     pub base: f64,
     pub quote: f64,
 }
+
+pub enum PairType {
+    UniV2,
+    GrapheneCL,
+}
+
+impl PairType {
+    pub fn as_str(&self) -> String {
+        match self {
+            PairType::UniV2 => "univ2".to_owned(),
+            PairType::GrapheneCL => "graphene_cl".to_owned(),
+        }
+    }
+}
